@@ -1,0 +1,24 @@
+{
+  "name": "Larr Eléctrico · Admin",
+  "short_name": "Larr Admin",
+  "description": "Panel de administración de la tienda Larr Eléctrico",
+  "start_url": "./index.php",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1b3a",
+  "theme_color": "#0b1b3a",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Productos", "short_name": "Productos", "url": "./products.php", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Pedidos", "short_name": "Pedidos", "url": "./orders.php", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Carritos", "short_name": "Carritos", "url": "./carts.php", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

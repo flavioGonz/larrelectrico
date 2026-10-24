@@ -1,7 +1,16 @@
 <?php
 function ah($title){ $u=admin(); $cur=basename($_SERVER['PHP_SELF']);
  $nav=[['index.php','dash','Dashboard'],['products.php','box','Productos'],['bulk.php','edit','Edición masiva'],['categories.php','grid','Categorías'],['vendors.php','tag','Vendors'],['orders.php','cart','Pedidos'],['carts.php','bell','Carritos abandonados'],['reviews.php','star','Reseñas'],['customers.php','users','Clientes'],['settings.php','cog','Configuración']];
- ob_start(); ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?=e($title)?> · Admin Larr Eléctrico</title>
+ ob_start(); ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title><?=e($title)?> · Admin Larr Eléctrico</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b1b3a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Larr Admin">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--blue:#0071e3;--navy:#0b1b3a;--ink:#1d1d1f;--mut:#6e6e73;--mut2:#86868b;--line:#e8e8ed;--bg:#f5f6f8;--ok:#1a9e4b;--amber:#ff8a00;--red:#e0245e}
@@ -89,11 +98,40 @@ body.leaving .wrapc{opacity:0;transform:translateY(-7px);transition:opacity .14s
 .ms-op.on{background:#eef4ff;color:var(--blue);font-weight:600}
 .ms-op .ck{margin-left:auto;opacity:0}.ms-op.on .ck{opacity:1}
 .ms-empty{padding:16px;text-align:center;color:var(--mut2);font-size:13px}
+/* ===== PWA móvil: botón menú, overlay y tab bar (ocultos en escritorio) ===== */
+.navtoggle{display:none;width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:#fff;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex-shrink:0}
+.navtoggle svg{width:20px;height:20px}
+.side-ov{display:none}
+.tabbar{display:none}
+.top .left{display:flex;align-items:center;gap:12px;min-width:0}
+.pwa-install{display:none}
+@media(max-width:820px){
+ .app{grid-template-columns:1fr}
+ .side{position:fixed;left:0;top:0;bottom:0;width:276px;z-index:140;transform:translateX(-100%);transition:transform .3s cubic-bezier(.3,.9,.3,1);height:100vh;overflow:auto;padding-bottom:40px;box-shadow:0 0 60px rgba(0,0,0,.35);display:block}
+ body.nav-open .side{transform:none}
+ .side-ov{display:block;position:fixed;inset:0;background:rgba(5,10,25,.5);backdrop-filter:blur(2px);z-index:130;opacity:0;visibility:hidden;transition:.25s}
+ body.nav-open .side-ov{opacity:1;visibility:visible}
+ .navtoggle{display:inline-flex}
+ .cards{grid-template-columns:1fr 1fr}
+ .top{padding:0 15px;height:auto;min-height:56px;padding-top:max(8px,env(safe-area-inset-top))}
+ .top h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .top .who span{display:none}
+ .wrapc{padding:20px 15px calc(82px + env(safe-area-inset-bottom))}
+ .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:100;background:rgba(255,255,255,.88);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:1px solid rgba(0,0,0,.08);padding:7px 6px calc(7px + env(safe-area-inset-bottom));justify-content:space-around}
+ .tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--mut2);padding:3px 0;border-radius:10px;transition:.15s;letter-spacing:.01em}
+ .tabbar a svg{width:23px;height:23px;stroke-width:1.9}
+ .tabbar a.on{color:var(--blue)}
+ .tabbar a:active{transform:scale(.9)}
+ .pwa-install{display:inline-flex}
+}
 </style></head><body><div class="app">
 <aside class="side"><div class="lg"><span class="b"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span>Larr<span style="color:#7db5ff">Admin</span></div>
 <?php foreach($nav as $x):?><a href="<?=$x[0]?>" class="<?=$cur===$x[0]?'on':''?>"><?=ico($x[1])?><?=$x[2]?></a><?php endforeach;?>
 <div class="sep"></div><a href="../index.html" target="_blank"><?=ico('eye')?>Ver tienda</a><a href="logout.php"><?=ico('out')?>Salir</a>
-</aside><div class="main"><div class="top"><h1><?=e($title)?></h1><div class="who"><span>Hola, <?=e($u['name'])?></span><a href="logout.php"><?=ico('out',16)?></a></div></div><div class="wrapc">
+</aside><div class="side-ov" onclick="document.body.classList.remove('nav-open')"></div><div class="main"><div class="top"><div class="left"><button type="button" class="navtoggle" aria-label="Menú" onclick="document.body.classList.toggle('nav-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><h1><?=e($title)?></h1></div><div class="who"><span>Hola, <?=e($u['name'])?></span><button type="button" class="btn btn-g btn-sm pwa-install" id="pwaInstall" aria-label="Instalar"><?=ico('box',15)?>Instalar</button><a href="logout.php"><?=ico('out',16)?></a></div></div>
+<?php $tabs=[['index.php','dash','Inicio'],['products.php','box','Productos'],['orders.php','cart','Pedidos'],['carts.php','bell','Carritos'],['settings.php','cog','Ajustes']];?>
+<nav class="tabbar"><?php foreach($tabs as $t):?><a href="<?=$t[0]?>" class="<?=$cur===$t[0]?'on':''?>"><?=ico($t[1])?><span><?=$t[2]?></span></a><?php endforeach;?></nav>
+<div class="wrapc">
 <?php $f=flash(); if($f):?><div class="flash"><?=e($f)?></div><?php endif; echo ob_get_clean(); }
 function af(){ echo '</div></div></div>
 <script>
@@ -140,6 +178,21 @@ function af(){ echo '</div></div></div>
  }
  function scan(){ [].slice.call(document.querySelectorAll("select.sel2")).forEach(enhance); }
  scan();
+})();
+/* ===== cerrar drawer al navegar / tecla Esc ===== */
+(function(){
+ document.addEventListener("keydown",function(e){ if(e.key==="Escape")document.body.classList.remove("nav-open"); });
+})();
+/* ===== PWA: service worker + instalar ===== */
+(function(){
+ if("serviceWorker" in navigator){
+  window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+ }
+ var deferred=null, btn=document.getElementById("pwaInstall");
+ if(btn)btn.style.display="none";
+ window.addEventListener("beforeinstallprompt",function(e){ e.preventDefault(); deferred=e; if(btn){btn.style.display="inline-flex";} });
+ if(btn)btn.addEventListener("click",function(){ if(!deferred)return; deferred.prompt(); deferred.userChoice.finally(function(){ deferred=null; btn.style.display="none"; }); });
+ window.addEventListener("appinstalled",function(){ if(btn)btn.style.display="none"; });
 })();
 </script>
 </body></html>'; }

@@ -65,6 +65,8 @@ ah($isNew?'Nuevo producto':'Editar producto');
    <input type="file" accept="image/*" multiple hidden>
    <div class="dz-bar"><div class="dz-barfill"></div></div>
   </div>
+  <div class="cam-row"><button type="button" class="btn btn-g btn-sm" id="camBtn"><?=ico('image',15)?> Tomar foto con la cámara</button><span class="cam-hint">Abre la cámara en el teléfono</span></div>
+  <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
   <div id="imgBox" style="margin-top:14px"><?php foreach($imgs?:[''] as $u):?><div class="imgrow" style="display:flex;gap:10px;margin-bottom:10px;align-items:center"><img class="thumb" src="<?=e(imgu($u))?>" onerror="this.style.visibility='hidden'"><input class="inp" name="img_url[]" placeholder="images/stories/virtuemart/product/... o URL" value="<?=e($u)?>"><button type="button" class="btn btn-d btn-sm" onclick="this.parentNode.remove()"><?=ico('trash',15)?></button></div><?php endforeach;?></div>
   <div class="field" style="margin-top:8px"><label><?=ico('video',15)?> Video de unboxing (URL YouTube/MP4)</label><input class="inp" name="video" value="<?=e($p['video'])?>" placeholder="https://youtube.com/watch?v=..."></div>
  </div></div>
@@ -108,7 +110,10 @@ ah($isNew?'Nuevo producto':'Editar producto');
 .dz-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:transparent}.dz-barfill{height:100%;width:0;background:linear-gradient(90deg,#2f6bff,#6aa6ff);transition:width .25s}
 .docrow{display:flex;gap:10px;margin-bottom:10px;align-items:center}
 .docrow .dc-ic{width:36px;height:36px;border-radius:9px;background:var(--bg3,#f1f1f4);display:grid;place-items:center;color:#d04343;flex-shrink:0}
-.imgrow .thumb,.imgrow img.thumb{width:46px;height:46px;border-radius:9px;object-fit:contain;background:var(--bg3,#f1f1f4);border:1px solid var(--line);flex-shrink:0}</style>
+.imgrow .thumb,.imgrow img.thumb{width:46px;height:46px;border-radius:9px;object-fit:contain;background:var(--bg3,#f1f1f4);border:1px solid var(--line);flex-shrink:0}
+.cam-row{display:flex;align-items:center;gap:12px;margin-top:11px;flex-wrap:wrap}
+.cam-hint{font-size:12px;color:var(--mut2)}
+@media(max-width:820px){.cam-row #camBtn{flex:1;justify-content:center;min-height:46px;font-size:14px}.cam-hint{flex-basis:100%;order:2}}</style>
 <script>
 (function(){ if(!window.Quill)return; var q=new Quill('#descrEditor',{theme:'snow',modules:{toolbar:[['bold','italic','underline'],[{header:[2,3,false]}],[{list:'ordered'},{list:'bullet'}],['link'],['clean']]}});
  var h=document.getElementById('descrHidden'); q.root.innerHTML=h.value||''; 
@@ -162,6 +167,12 @@ function addImg(){const d=document.createElement('div');d.className='imgrow';d.s
   zone.addEventListener('drop',function(e){ [].forEach.call(e.dataTransfer.files,function(f){ upload(f,zone); }); });
  }
  wire('dzImg'); wire('dzDoc');
+ /* cámara: usa el mismo subidor, muestra progreso en la zona de imágenes */
+ var camBtn=document.getElementById('camBtn'), camInput=document.getElementById('camInput'), dzI=document.getElementById('dzImg');
+ if(camBtn&&camInput&&dzI){
+  camBtn.addEventListener('click',function(){ camInput.click(); });
+  camInput.addEventListener('change',function(){ [].forEach.call(camInput.files,function(f){ upload(f,dzI); }); camInput.value=''; });
+ }
 })();
 </script>
 <?php af();

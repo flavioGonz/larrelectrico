@@ -170,6 +170,7 @@ section{position:relative}
 .pp-gal{position:sticky;top:86px;align-self:start}
 .pp-gal .main{aspect-ratio:1;max-height:440px;background:#e9eaed;border:1px solid var(--line);border-radius:20px;display:grid;place-items:center;padding:40px;position:relative;overflow:hidden}
 .pp-vlogo{position:absolute;right:16px;bottom:16px;max-height:24px;max-width:120px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:11px;padding:7px 11px;box-shadow:var(--sh);z-index:2;pointer-events:none}
+@media(max-width:700px){.pp-vlogo{max-height:16px;max-width:84px;padding:5px 8px;right:10px;bottom:10px;border-radius:9px}}
 .pp-gal .main:has(.noimg){aspect-ratio:auto;height:300px;padding:24px}
 .pp-gal .main img{max-width:100%;max-height:440px;object-fit:contain;mix-blend-mode:multiply}
 .pp-gal .main .noimg{color:#cfcfd4}.pp-gal .main .noimg svg{width:80px;height:80px}
