@@ -1,5 +1,6 @@
 <?php
 session_start();
+if(!headers_sent()) header('Cache-Control: no-store, must-revalidate'); // páginas de admin siempre frescas
 $CFG=require(__DIR__.'/../config.php');
 function db(){ static $p=null; global $CFG; if($p===null){ $p=new PDO("mysql:host={$CFG['db_host']};dbname={$CFG['db_name']};charset=utf8mb4",$CFG['db_user'],$CFG['db_pass'],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]); } return $p; }
 (function(){ global $CFG; try{ $pdo=db(); $pdo->exec("CREATE TABLE IF NOT EXISTS settings(k VARCHAR(60) PRIMARY KEY, v TEXT) DEFAULT CHARSET=utf8mb4"); foreach($pdo->query("SELECT k,v FROM settings") as $r){ if($r['k']==='pay_methods'){ $d=json_decode($r['v'],true); if(is_array($d))$CFG['pay_methods']=$d; continue;} $CFG[$r['k']]=$r['v']; }

@@ -1,6 +1,7 @@
 <?php require(__DIR__.'/inc.php'); require_once(__DIR__.'/totp.php'); require_admin();
 $u=admin();
-$row=db()->prepare("SELECT totp_enabled,totp_secret FROM users WHERE id=?"); $row->execute([$u['id']]); $me=$row->fetch();
+$me=['totp_enabled'=>0,'totp_secret'=>null];
+try{ $row=db()->prepare("SELECT totp_enabled,totp_secret FROM users WHERE id=?"); $row->execute([$u['id']]); $r=$row->fetch(); if($r)$me=$r; }catch(Exception $e){}
 $enabled=!empty($me['totp_enabled']);
 $issuer='Larr Eléctrico Admin';
 $msg=''; $msgtype='';
@@ -66,7 +67,8 @@ ah('Seguridad');
    </form>
   <?php elseif($setup): ?>
    <span class="state off"><span class="d"></span>Configurando…</span>
-   <p class="desc" style="margin-top:14px">Escaneá el código QR con <b>Google Authenticator</b>, <b>Authy</b> o <b>Microsoft Authenticator</b> y después ingresá el código que aparece para confirmar.</p>
+   <p class="desc" style="margin-top:14px">Tenés 3 formas de agregarlo a tu app (<b>Google Authenticator</b>, <b>Authy</b> o <b>Microsoft Authenticator</b>). Después ingresá el código de 6 dígitos para confirmar.</p>
+   <a href="<?=e($uri)?>" class="btn btn-pri" style="width:100%;justify-content:center;margin-bottom:14px"><?=ico('key',16)?> Abrir en mi app autenticadora</a>
    <div class="qrwrap">
     <div id="qrbox" data-uri="<?=e($uri)?>"></div>
     <div class="qrsteps">
@@ -156,7 +158,7 @@ ah('Seguridad');
    list.innerHTML=h;
    list.querySelectorAll('[data-del]').forEach(function(btn){ btn.addEventListener('click',function(){ var fd=new URLSearchParams({csrf:CSRF,act:'delete',id:btn.getAttribute('data-del')}); fetch('wa_reg.php?act=delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd}).then(function(){ load(); }); }); });
  }
- function load(){ fetch('wa_reg.php?act=list').then(function(r){return r.json();}).then(function(d){ var n=(d.creds||[]).length; renderList(d.creds); setState(n?('Activo ('+n+')'):'Sin passkeys',n>0); if(addBtn)addBtn.innerHTML=(n?'Registrar otro dispositivo':'<?=addslashes(ico('key',16))?> Registrar Face ID en este dispositivo'); }).catch(function(){ setState('—',false); }); }
+ function load(){ fetch('wa_reg.php?act=list').then(function(r){return r.json();}).then(function(d){ var n=(d.creds||[]).length; renderList(d.creds); setState(n?('Activo ('+n+')'):'Sin passkeys',n>0); if(addBtn)addBtn.textContent=(n?'Registrar otro dispositivo':'Registrar Face ID en este dispositivo'); }).catch(function(){ setState('Sin passkeys',false); }); }
  function register(){
    addBtn.disabled=true; if(hint)hint.style.display='none';
    fetch('wa_reg.php?act=options').then(function(r){return r.json();}).then(function(opt){
