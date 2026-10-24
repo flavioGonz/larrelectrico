@@ -29,10 +29,14 @@ try{
  $phone=trim($in['phone']??($u['phone']??''));
  $note=trim($in['note']??'');
  $pay=trim($in['payment']??'');            // transfer|giros|cod|pickup|mp
- // guardamos el total CON IVA (lo que paga el cliente); el detalle por línea queda en items
- $payload=['lines'=>$lines,'subtotal'=>$subtotal,'iva'=>$iva,'total'=>$total,'note'=>$note,'payment'=>$pay];
+ global $CFG;
+ $disc = ($pay==='transfer') ? (float)($CFG['transfer_discount']??0.10) : 0;   // 10% off por transferencia
+ $disc_amt = round($total*$disc,2);
+ $pagar = round($total-$disc_amt,2);       // lo que realmente paga el cliente
+ // total guardado = lo que paga el cliente (con descuento aplicado si corresponde)
+ $payload=['lines'=>$lines,'subtotal'=>$subtotal,'iva'=>$iva,'total'=>$total,'discount'=>$disc,'discount_amt'=>$disc_amt,'total_pagar'=>$pagar,'note'=>$note,'payment'=>$pay];
  $pdo->prepare("INSERT INTO orders(user_id,customer,email,phone,total,items,status,created) VALUES(?,?,?,?,?,?,'nuevo',NOW())")
-     ->execute([$u['id']??null,$cust,$email,$phone,$total,json_encode($payload,JSON_UNESCAPED_UNICODE)]);
+     ->execute([$u['id']??null,$cust,$email,$phone,$pagar,json_encode($payload,JSON_UNESCAPED_UNICODE)]);
  $oid=$pdo->lastInsertId();
- echo json_encode(['ok'=>true,'order'=>(int)$oid,'subtotal'=>$subtotal,'iva'=>$iva,'total'=>$total,'lines'=>$lines,'warnings'=>$warn]);
+ echo json_encode(['ok'=>true,'order'=>(int)$oid,'subtotal'=>$subtotal,'iva'=>$iva,'total'=>$total,'discount'=>$disc,'discount_amt'=>$disc_amt,'total_pagar'=>$pagar,'lines'=>$lines,'warnings'=>$warn]);
 }catch(Exception $e){ http_response_code(500); echo json_encode(['error'=>$e->getMessage()]); }

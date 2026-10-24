@@ -7,6 +7,9 @@ _*.json
 # Deploy script (contiene token de cPanel)
 build/deploy.ps1
 build/readcfg.mjs
+build/push.ps1
+build/*.log
+assets/uploads/
 # Build/catalog cache
 catalog.json
 node_modules/

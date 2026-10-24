@@ -34,6 +34,7 @@ if($view){ $o=$pdo->query("SELECT * FROM orders WHERE id=$view")->fetch();
   $sub=$meta['subtotal']??array_sum(array_map(fn($it)=>($it['price']??0)*($it['qty']??1),$items));
   $iva=$meta['iva']??round($sub*0.22,2);
   $grand=$meta['total']??$o['total'];
+  $discAmt=$meta['discount_amt']??0; $pagar=$meta['total_pagar']??$o['total'];
   ah('Pedido #'.$view);
   ?>
   <a href="orders.php" class="btn btn-g btn-sm" style="margin-bottom:16px"><?=ico('chev',15)?>Volver a pedidos</a>
@@ -44,12 +45,14 @@ if($view){ $o=$pdo->query("SELECT * FROM orders WHERE id=$view")->fetch();
   <?php } ?>
   <tr><td colspan="4" style="text-align:right;color:var(--mut)">Subtotal (sin IVA)</td><td><?=money($sub)?></td></tr>
   <tr><td colspan="4" style="text-align:right;color:var(--mut)">IVA (22%)</td><td><?=money($iva)?></td></tr>
-  <tr><td colspan="4" style="text-align:right;font-weight:700">Total con IVA</td><td style="font-weight:800"><?=money($grand)?></td></tr>
+  <tr><td colspan="4" style="text-align:right;color:var(--mut)">Total con IVA</td><td><?=money($grand)?></td></tr>
+  <?php if($discAmt>0):?><tr><td colspan="4" style="text-align:right;color:var(--ok)">Descuento transferencia (10%)</td><td style="color:var(--ok)">− <?=money($discAmt)?></td></tr><?php endif;?>
+  <tr><td colspan="4" style="text-align:right;font-weight:700">Total a pagar</td><td style="font-weight:800"><?=money($pagar)?></td></tr>
   </tbody></table></div>
   <div><div class="panel"><div class="ph"><h2>Cliente</h2></div><div style="padding:16px 20px;font-size:14px;line-height:1.9">
    <div><b><?=e($o['customer'])?:'—'?></b></div><div style="color:var(--mut)"><?=e($o['email'])?:'—'?></div>
    <div style="color:var(--mut)"><?=e($o['phone'])?:'—'?></div><div style="color:var(--mut2);margin-top:8px"><?=e($o['created'])?></div>
-   <?php $PM=['transfer'=>'Transferencia / Giro bancario','giros'=>'Giros Redpagos / Abitab','cod'=>'Pago contra entrega','pickup'=>'Retira en local','mp'=>'Mercado Pago (+9%)']; $pmk=$meta['payment']??''; if($pmk):?><div style="margin-top:10px;font-size:13px"><span style="color:var(--mut2)">Medio de pago:</span> <b><?=e($PM[$pmk]??$pmk)?></b></div><?php endif;?>
+   <?php $PM=['transfer'=>'Transferencia / Giro bancario','giros'=>'Giros Redpagos / Abitab','cod'=>'Pago contra entrega','pickup'=>'Retira en local','mp'=>'Mercado Pago']; $pmk=$meta['payment']??''; if($pmk):?><div style="margin-top:10px;font-size:13px"><span style="color:var(--mut2)">Medio de pago:</span> <b><?=e($PM[$pmk]??$pmk)?></b></div><?php endif;?>
    <?php if(!empty($meta['note'])):?><div style="margin-top:10px;padding:10px 12px;background:var(--bg);border-radius:9px;font-size:13px;color:var(--ink)"><b>Nota:</b> <?=e($meta['note'])?></div><?php endif;?>
   </div></div>
   <div class="panel"><div class="ph"><h2>Estado</h2></div><form method="post" style="padding:16px 20px"><input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="id" value="<?=$view?>"><input type="hidden" name="view" value="1">

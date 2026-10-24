@@ -65,14 +65,15 @@ function closeCart(){el('#drawer').classList.remove('on');el('#ov').classList.re
 function toast(t){let e=el('#toast');if(!e){e=document.createElement('div');e.id='toast';e.className='toast';document.body.appendChild(e);}e.innerHTML=svg('check',18)+'<span>'+t+'</span>';e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),1800);}
 function clearCart(){CART=[];localStorage.setItem('larr_cart','[]');renderCart();}
 let PAYINFO=null;
-async function getPayInfo(){ if(PAYINFO)return PAYINFO; try{PAYINFO=await (await fetch(API+'payinfo.php')).json();}catch(e){PAYINFO={methods:{},surcharge:0.09,mp_enabled:false,wa:WA};} return PAYINFO; }
+async function getPayInfo(){ if(PAYINFO)return PAYINFO; try{PAYINFO=await (await fetch(API+'payinfo.php')).json();}catch(e){PAYINFO={methods:{},surcharge:0,discount:0.10,mp_enabled:false,wa:WA};} return PAYINFO; }
 function waMessage(o,pay,info,name){
   const m=(info.methods||{})[pay]||{}; const L=[];
   L.push('Hola Larr Eléctrico! Soy '+name+'. Quiero confirmar este pedido:','');
   (o.lines||[]).forEach(l=>L.push('• '+l.qty+'x '+l.name+(l.sku?' ('+l.sku+')':'')));
   L.push('','Subtotal: '+money(o.subtotal),'IVA (22%): '+money(o.iva),'Total con IVA: '+money(o.total));
+  if(o.discount_amt>0) L.push('Descuento transferencia (10%): -'+money(o.discount_amt));
+  L.push('Total a pagar: '+money(o.total_pagar!=null?o.total_pagar:o.total));
   L.push('','Medio de pago: '+(m.label||pay));
-  if(pay==='mp') L.push('(con 9% de recargo)');
   if(pay==='transfer'&&m.accounts) m.accounts.forEach(a=>L.push(a.bank+': '+a.num));
   if(pay==='giros') L.push('Giro a la C.I. 3.977.308-8');
   L.push('Pedido #'+o.order);
@@ -84,29 +85,31 @@ async function checkout(){
   const sub=CART.reduce((s,c)=>s+(c.price||0)*c.qty,0), iva=sub*IVA, tot=sub+iva;
   const methods=info.methods||{}; const keys=Object.keys(methods);
   let ov=el('#coOv'); if(!ov){ov=document.createElement('div');ov.id='coOv';ov.className='co-ov';document.body.appendChild(ov);}
+  const shortD={transfer:'Transferencia o giro bancario.',giros:'Giros Redpagos / Abitab.',cod:'Abonás al recibir el pedido.',pickup:'Retirás en el local (48 hs).',mp:'Tarjeta, débito o cuotas, online.'};
   ov.innerHTML=`<div class="co-modal" role="dialog" aria-modal="true">
     <button class="co-x" id="coX" aria-label="Cerrar">${svg('x',20)}</button>
-    <h3 class="co-h">Finalizar compra</h3>
-    <div class="co-scroll">
-      <div class="co-sec"><div class="co-lb">${svg('user',15)} Tus datos</div>
+    <div class="co-head"><h3 class="co-h">Finalizar compra</h3><p class="co-subt">Completá tus datos, elegí cómo pagar y confirmá tu pedido.</p></div>
+    <div class="co-body">
+      <div class="co-lb">${svg('user',15)} Tus datos</div>
+      <div class="co-fields">
         <input class="co-inp" id="coName" placeholder="Nombre y apellido *">
-        <div class="co-row"><input class="co-inp" id="coPhone" placeholder="Teléfono / WhatsApp *"><input class="co-inp" id="coEmail" placeholder="Email (opcional)"></div>
+        <input class="co-inp" id="coPhone" placeholder="Teléfono / WhatsApp *">
+        <input class="co-inp" id="coEmail" placeholder="Email (opcional)">
       </div>
-      <div class="co-sec"><div class="co-lb">${svg('cart',15)} Medio de pago</div>
-        <div class="co-pays">${keys.map((k,i)=>{const m=methods[k];const dis=(k==='mp'&&!info.mp_enabled);
-          return `<label class="co-pay${dis?' off':''}"><input type="radio" name="copay" value="${k}" ${i===0?'checked':''} ${dis?'disabled':''}>
-          <span class="co-paybody"><span class="co-payt">${m.label}${k==='mp'?` <span class="co-sur">+${Math.round(info.surcharge*100)}%</span>`:''}</span>
-          <span class="co-payd">${m.desc||''}${dis?' · se activa al cargar las credenciales':''}</span>
-          ${k==='transfer'&&m.accounts?`<span class="co-acc">${m.accounts.map(a=>`<span><b>${a.bank}</b> ${a.num}</span>`).join('')}</span>`:''}</span>
-          <span class="co-radio"></span></label>`;}).join('')}</div>
-      </div>
-      <div class="co-sec"><textarea class="co-inp" id="coNote" placeholder="Comentario o nota del pedido (opcional)" rows="2"></textarea></div>
+      <input class="co-inp" id="coNote" placeholder="Comentario o nota del pedido (opcional)">
+      <div class="co-lb" style="margin-top:6px">${svg('cart',15)} Medio de pago</div>
+      <div class="co-paygrid">${keys.map((k,i)=>{const m=methods[k];const dis=(k==='mp'&&!info.mp_enabled);
+        return `<label class="co-pay${dis?' off':''}"><input type="radio" name="copay" value="${k}" ${i===0?'checked':''} ${dis?'disabled':''}>
+        <span class="co-radio"></span>
+        <span class="co-paybody"><span class="co-payt">${m.label}${k==='transfer'&&info.discount>0?` <span class="co-disc">−${Math.round(info.discount*100)}%</span>`:''}</span>
+        <span class="co-payd">${shortD[k]||m.desc||''}${dis?' · no disponible aún':''}</span></span></label>`;}).join('')}</div>
+      <div class="co-detail" id="coDetail"></div>
     </div>
     <div class="co-foot">
       <div class="co-tot">
         <div class="co-trow"><span>Subtotal</span><span>${money(sub)}</span></div>
         <div class="co-trow"><span>IVA (22%)</span><span>${money(iva)}</span></div>
-        <div class="co-trow" id="coSurRow" style="display:none"><span>Recargo Mercado Pago (9%)</span><span id="coSur"></span></div>
+        <div class="co-trow co-disc-row" id="coDiscRow" style="display:none"><span>Descuento transferencia (10%)</span><span id="coDisc"></span></div>
         <div class="co-trow co-grand"><span>Total</span><span id="coTot">${money(tot)}</span></div>
       </div>
       <button class="btn btn-pri btn-lg co-go" id="coGo">${svg('wa',18)}<span>Confirmar por WhatsApp</span></button>
@@ -116,9 +119,19 @@ async function checkout(){
   const close=()=>ov.classList.remove('on');
   el('#coX').onclick=close; ov.onclick=e=>{if(e.target===ov)close();};
   try{const me=await fetch(API+'auth.php?action=me').then(r=>r.json());if(me&&me.user){if(me.user.name)el('#coName').value=me.user.name;if(me.user.email)el('#coEmail').value=me.user.email;if(me.user.phone)el('#coPhone').value=me.user.phone;}}catch(e){}
+  const detailFor=k=>{const m=methods[k]||{};
+    if(k==='transfer'&&m.accounts) return '<b>Transferí a:</b> '+m.accounts.map(a=>a.bank+' '+a.num).join(' &nbsp;·&nbsp; ')+' — y nos mandás el comprobante por WhatsApp.';
+    if(k==='giros') return 'Giro a la <b>C.I. 3.977.308-8</b> (Redpagos o Abitab). Nos mandás el comprobante por WhatsApp.';
+    if(k==='cod') return 'Abonás en efectivo cuando recibís el pedido.';
+    if(k==='pickup') return 'Retirás tu pedido en nuestro local dentro de las 48 hs.';
+    if(k==='mp') return info.mp_enabled?'Pagás online con Mercado Pago: tarjeta de crédito/débito o cuotas.':'Mercado Pago se habilita próximamente; por ahora coordinás por WhatsApp.';
+    return '';};
   const updTot=()=>{const k=(ov.querySelector('input[name=copay]:checked')||{}).value;const go=el('#coGo');
-    if(k==='mp'){const sur=tot*info.surcharge;el('#coSurRow').style.display='flex';el('#coSur').textContent=money(sur);el('#coTot').textContent=money(tot+sur);go.innerHTML=svg('arrow',18)+'<span>Pagar con Mercado Pago</span>';}
-    else{el('#coSurRow').style.display='none';el('#coTot').textContent=money(tot);go.innerHTML=svg('wa',18)+'<span>Confirmar por WhatsApp</span>';}
+    const det=el('#coDetail'), html=detailFor(k); det.innerHTML=html; det.style.display=html?'block':'none';
+    if(k==='transfer'&&info.discount>0){const d=tot*info.discount;el('#coDiscRow').style.display='flex';el('#coDisc').textContent='− '+money(d);el('#coTot').textContent=money(tot-d);}
+    else{el('#coDiscRow').style.display='none';el('#coTot').textContent=money(tot);}
+    if(k==='mp')go.innerHTML=svg('arrow',18)+'<span>Pagar con Mercado Pago</span>';
+    else go.innerHTML=svg('wa',18)+'<span>Confirmar por WhatsApp</span>';
     go.onclick=()=>confirmCheckout(info,close);};
   ov.querySelectorAll('input[name=copay]').forEach(r=>r.onchange=updTot); updTot();
 }
@@ -299,13 +312,84 @@ async function initAuth(){
     const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',name:el('#rgName').value,email:el('#rgEmail').value,phone:el('#rgPhone').value,pass:el('#rgPass').value})}).then(r=>r.json());
     if(res.error){m.className='msg err';m.textContent=res.error;}else location.reload();};
 }
+const PAYLBL={transfer:'Transferencia / Giro',giros:'Giros Redpagos / Abitab',cod:'Pago contra entrega',pickup:'Retira en local',mp:'Mercado Pago'};
+const ORD_STEPS=['nuevo','pagado','en proceso','enviado','entregado'];
+function ordStepper(status){
+  if(status==='cancelado') return '<div class="ord-cancel">'+svg('x',15)+' Pedido cancelado</div>';
+  let i=ORD_STEPS.indexOf(status); if(i<0)i=0;
+  return '<div class="ord-steps">'+ORD_STEPS.map((s,x)=>`<div class="ord-step${x<=i?' done':''}${x===i?' cur':''}"><span class="od-dot">${x<i?svg('check',12):''}</span><span class="od-lb">${s}</span></div>`).join('')+'</div>';
+}
+function esc2(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function renderAccount(u){
-  el('#authRoot').innerHTML=`<div class="auth"><h1>Hola, ${u.name.split(' ')[0]}</h1><p class="sub">${u.email}</p>
-   <div class="field"><label>Nombre</label><input value="${u.name}" disabled></div>
-   <div class="field"><label>Email</label><input value="${u.email}" disabled></div>
-   ${u.phone?`<div class="field"><label>Teléfono</label><input value="${u.phone}" disabled></div>`:''}
-   <button class="btn btn-ghost btn-block" id="logout">Cerrar sesión</button></div>`;
+  const wrap=document.querySelector('.authwrap'); if(!wrap){el('#authRoot').innerHTML='';return;}
+  wrap.classList.add('acct');
+  const av=u.avatar?imgu(u.avatar):null;
+  const ini=((u.name||'?').trim()[0]||'?').toUpperCase();
+  wrap.innerHTML=`<div class="acc">
+    <div class="acc-top">
+      <label class="acc-av" id="avBox" title="Cambiar foto">
+        ${av?`<img id="avImg" src="${av}">`:`<span class="acc-ini" id="avImg">${ini}</span>`}
+        <span class="acc-cam">${svg('plus',15)}</span>
+        <input type="file" id="avFile" accept="image/*" hidden>
+      </label>
+      <div class="acc-id"><h1>${esc2(u.name)}</h1><p>${esc2(u.email)}${u.phone?' · '+esc2(u.phone):''}</p></div>
+      <button class="btn btn-g" id="logout">${svg('arrow',16)} Cerrar sesión</button>
+    </div>
+    <div class="acc-tabs">
+      <button class="on" data-t="orders">${svg('cart',16)} Mis pedidos</button>
+      <button data-t="profile">${svg('user',16)} Mi perfil</button>
+      <button data-t="sec">${svg('shield',16)} Seguridad</button>
+    </div>
+    <div class="acc-pane" id="paneOrders"><div class="acc-load">Cargando tus pedidos…</div></div>
+    <div class="acc-pane" id="paneProfile" style="display:none">
+      <div class="acc-card">
+        <div class="acc-ff"><div class="field"><label>Nombre y apellido</label><input class="inp2" id="pfName" value="${esc2(u.name)}"></div>
+        <div class="field"><label>Email</label><input class="inp2" id="pfEmail" type="email" value="${esc2(u.email)}"></div></div>
+        <div class="field"><label>Teléfono</label><input class="inp2" id="pfPhone" value="${esc2(u.phone||'')}" placeholder="Ej. 099 123 456"></div>
+        <div class="acc-row"><button class="btn btn-pri" id="pfSave">${svg('check',16)} Guardar cambios</button><span class="acc-msg" id="pfMsg"></span></div>
+      </div>
+    </div>
+    <div class="acc-pane" id="paneSec" style="display:none">
+      <div class="acc-card">
+        <div class="field"><label>Contraseña actual</label><input class="inp2" id="scCur" type="password" autocomplete="current-password"></div>
+        <div class="acc-ff"><div class="field"><label>Nueva contraseña</label><input class="inp2" id="scNew" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></div>
+        <div class="field"><label>Repetir nueva</label><input class="inp2" id="scNew2" type="password" autocomplete="new-password"></div></div>
+        <div class="acc-row"><button class="btn btn-pri" id="scSave">${svg('shield',16)} Cambiar contraseña</button><span class="acc-msg" id="scMsg"></span></div>
+      </div>
+    </div>
+  </div>`;
+  const panes={orders:'#paneOrders',profile:'#paneProfile',sec:'#paneSec'};
+  wrap.querySelectorAll('.acc-tabs button').forEach(b=>b.onclick=()=>{wrap.querySelectorAll('.acc-tabs button').forEach(x=>x.classList.toggle('on',x===b));Object.entries(panes).forEach(([k,sel])=>el(sel).style.display=(k===b.dataset.t)?'block':'none');});
   el('#logout').onclick=async()=>{await fetch(API+'auth.php?action=logout');location.href='index.html';};
+  // avatar
+  el('#avBox').onclick=e=>{if(e.target.tagName!=='INPUT')el('#avFile').click();};
+  el('#avFile').onchange=async()=>{const f=el('#avFile').files[0];if(!f)return;const fd=new FormData();fd.append('file',f);
+    const box=el('#avBox');box.classList.add('up');
+    const r=await fetch(API+'avatar.php',{method:'POST',body:fd}).then(r=>r.json()).catch(()=>({error:'Error de red'}));box.classList.remove('up');
+    if(r.ok){const url=imgu(r.avatar);let img=el('#avImg');if(img&&img.tagName==='IMG')img.src=url;else img.outerHTML='<img id="avImg" src="'+url+'">';const nv=el('#navUserImg');if(nv)nv.src=url;toast('Foto actualizada');}
+    else alert(r.error||'No se pudo subir la foto.');};
+  // profile save
+  el('#pfSave').onclick=async()=>{const b=el('#pfMsg');b.textContent='';b.className='acc-msg';
+    const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',name:el('#pfName').value,email:el('#pfEmail').value,phone:el('#pfPhone').value})}).then(r=>r.json()).catch(()=>({error:'Error de red'}));
+    if(res.error){b.className='acc-msg err';b.textContent=res.error;}else{b.className='acc-msg ok';b.textContent='✓ Datos guardados';wrap.querySelector('.acc-id h1').textContent=res.user.name;wrap.querySelector('.acc-id p').innerHTML=esc2(res.user.email)+(res.user.phone?' · '+esc2(res.user.phone):'');toast('Perfil actualizado');}};
+  // password
+  el('#scSave').onclick=async()=>{const b=el('#scMsg');b.textContent='';b.className='acc-msg';
+    if(el('#scNew').value!==el('#scNew2').value){b.className='acc-msg err';b.textContent='Las contraseñas nuevas no coinciden.';return;}
+    const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'password',current:el('#scCur').value,new:el('#scNew').value})}).then(r=>r.json()).catch(()=>({error:'Error de red'}));
+    if(res.error){b.className='acc-msg err';b.textContent=res.error;}else{b.className='acc-msg ok';b.textContent='✓ Contraseña actualizada';el('#scCur').value=el('#scNew').value=el('#scNew2').value='';toast('Contraseña cambiada');}};
+  loadAccOrders();
+}
+async function loadAccOrders(){
+  const box=el('#paneOrders');if(!box)return;
+  const r=await fetch(API+'auth.php?action=orders').then(r=>r.json()).catch(()=>({}));
+  const os=r.orders||[];
+  if(!os.length){box.innerHTML='<div class="acc-empty">'+svg('cart',42)+'<p>Todavía no hiciste pedidos.</p><a class="btn btn-pri" href="catalogo.html">Ir al catálogo</a></div>';return;}
+  box.innerHTML=os.map(o=>`<div class="ord">
+    <div class="ord-h"><div class="ord-hl"><b>Pedido #${o.id}</b><span class="ord-date">${(o.created||'').slice(0,16).replace('T',' ')}</span></div><div class="ord-tot">${money(o.total)}</div></div>
+    ${ordStepper(o.status)}
+    <div class="ord-items">${o.items.map(it=>`<span class="ord-it">${it.qty}× ${esc2(it.name)}</span>`).join('')}</div>
+    ${o.payment?`<div class="ord-pay">${svg('cart',13)} ${PAYLBL[o.payment]||o.payment}</div>`:''}
+  </div>`).join('');
 }
 async function initFav(){const d=await getData();const box=el('#favGrid');const items=d.products.filter(p=>WL.includes(p.id));
   if(!items.length){box.innerHTML='';el('#favEmpty').innerHTML='<div class="cempty" style="padding:70px 20px">'+svg('heart',46)+'<div style="margin:12px 0 4px">Todavía no tienes favoritos.</div><a class="btn btn-pri" style="margin-top:14px" href="catalogo.html">Ir al catálogo</a></div>';return;}
@@ -317,6 +401,7 @@ async function initHeader(){
   if(mm)mm.innerHTML=cats.map(c=>`<a href="catalogo.html?cat=${encodeURIComponent(c.name)}"><span class="mi">${svg(catIcon(c.name),17)}</span><span>${c.name}</span><span class="mc">${c.n}</span></a>`).join('')+`<a class="mall" href="catalogo.html">Ver todo el catálogo</a>`;
   const b=el('#burger'); if(b)b.onclick=()=>openMobMenu(cats);
   initLiveSearch(d);
+  try{const me=await fetch(API+'auth.php?action=me').then(r=>r.json());const nu=el('#navUser');if(me&&me.user&&me.user.avatar&&nu){nu.classList.add('hasav');nu.innerHTML='<img id="navUserImg" src="'+imgu(me.user.avatar)+'">';}}catch(e){}
 }
 function initLiveSearch(d){
   const form=document.querySelector('.navsearch'); const inp=form&&form.querySelector('input'); if(!inp)return;
