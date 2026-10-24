@@ -23,7 +23,7 @@ ah('Configuración');
 ?>
 <form method="post">
 <input type="hidden" name="csrf" value="<?=csrf()?>">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+<div class="grid2" style="gap:20px;align-items:start">
 
  <div class="panel"><div class="ph"><h2><?=ico('cog',16)?> Tienda</h2></div><div style="padding:18px 20px">
   <div class="field"><label>Nombre de la tienda</label><input class="inp" name="site_name" value="<?=e($g('site_name','Larr Eléctrico'))?>"></div>
@@ -40,7 +40,7 @@ ah('Configuración');
  <div class="panel" style="grid-column:1/-1"><div class="ph"><h2><?=ico('key',16)?> Mercado Pago</h2>
    <span class="badge <?=$mpLive?'ok':'am'?>"><?=$mpLive?'Activo':'Sin configurar'?></span></div>
   <div style="padding:18px 20px">
-   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+   <div class="grid2" style="gap:16px">
     <div class="field"><label>Public Key <?=tip('La encontrás en Mercado Pago → Tu negocio → Configuración → Credenciales. Empieza con APP_USR-')?></label><input class="inp" name="mp_public_key" value="<?=e($g('mp_public_key'))?>" placeholder="APP_USR-..."></div>
     <div class="field"><label>Modo</label>
      <label style="display:flex;align-items:center;gap:10px;height:42px;cursor:pointer"><input type="checkbox" name="mp_sandbox" <?=$sandbox?'checked':''?>> <span>Modo prueba (sandbox)</span> <?=tip('Activado: usa las credenciales TEST y no cobra de verdad. Desactivá para cobrar en producción.')?></label></div>
