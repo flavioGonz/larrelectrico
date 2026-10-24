@@ -1,7 +1,7 @@
 <?php
 require_once(__DIR__.'/pwagate.php'); require_once(__DIR__.'/swreg.php');
 function ah($title){ $u=admin(); $cur=basename($_SERVER['PHP_SELF']);
- $nav=[['index.php','dash','Dashboard'],['products.php','box','Productos'],['bulk.php','edit','Edición masiva'],['categories.php','grid','Categorías'],['vendors.php','tag','Vendors'],['orders.php','cart','Pedidos'],['carts.php','bell','Carritos abandonados'],['reviews.php','star','Reseñas'],['customers.php','users','Clientes'],['settings.php','cog','Configuración']];
+ $nav=[['index.php','dash','Dashboard'],['products.php','box','Productos'],['bulk.php','edit','Edición masiva'],['categories.php','grid','Categorías'],['vendors.php','tag','Vendors'],['orders.php','cart','Pedidos'],['carts.php','bell','Carritos abandonados'],['reviews.php','star','Reseñas'],['customers.php','users','Clientes'],['settings.php','cog','Configuración'],['security.php','key','Seguridad']];
  ob_start(); ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title><?=e($title)?> · Admin Larr Eléctrico</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0b1b3a">

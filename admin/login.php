@@ -1,12 +1,29 @@
-<?php require(__DIR__.'/inc.php'); require_once(__DIR__.'/pwagate.php'); require_once(__DIR__.'/swreg.php');
-$err='';
+<?php require(__DIR__.'/inc.php'); require_once(__DIR__.'/pwagate.php'); require_once(__DIR__.'/swreg.php'); require_once(__DIR__.'/totp.php');
+$err=''; $step='login';
 if($_SERVER['REQUEST_METHOD']==='POST'){
-  $email=strtolower(trim($_POST['email']??'')); $pass=$_POST['pass']??'';
-  $s=db()->prepare("SELECT * FROM users WHERE email=? AND role='admin'"); $s->execute([$email]); $u=$s->fetch();
-  if($u && password_verify($pass,$u['pass_hash'])){ $_SESSION['admin']=['id'=>$u['id'],'name'=>$u['name'],'email'=>$u['email']]; header('Location: index.php'); exit; }
-  $err='Credenciales incorrectas o sin permisos de administrador.';
+  if(isset($_POST['code']) && !empty($_SESSION['pending2fa'])){
+    // segundo paso: verificar código 2FA
+    $p=$_SESSION['pending2fa'];
+    if(totp_verify($p['secret'], $_POST['code'])){
+      $_SESSION['admin']=['id'=>$p['id'],'name'=>$p['name'],'email'=>$p['email']]; unset($_SESSION['pending2fa']);
+      session_regenerate_id(true); header('Location: index.php'); exit;
+    }
+    $err='Código incorrecto. Revisá tu app autenticadora.'; $step='2fa';
+  } else {
+    $email=strtolower(trim($_POST['email']??'')); $pass=$_POST['pass']??'';
+    $s=db()->prepare("SELECT * FROM users WHERE email=? AND role='admin'"); $s->execute([$email]); $u=$s->fetch();
+    if($u && password_verify($pass,$u['pass_hash'])){
+      if(!empty($u['totp_enabled']) && !empty($u['totp_secret'])){
+        $_SESSION['pending2fa']=['id'=>$u['id'],'name'=>$u['name'],'email'=>$u['email'],'secret'=>$u['totp_secret']]; $step='2fa';
+      } else {
+        $_SESSION['admin']=['id'=>$u['id'],'name'=>$u['name'],'email'=>$u['email']]; session_regenerate_id(true); header('Location: index.php'); exit;
+      }
+    } else { $err='Credenciales incorrectas o sin permisos de administrador.'; }
+  }
 }
+if(isset($_GET['reset'])){ unset($_SESSION['pending2fa']); $step='login'; }
 if(admin()){ header('Location: index.php'); exit; }
+if($step!=='2fa' && !empty($_SESSION['pending2fa']) && $_SERVER['REQUEST_METHOD']!=='POST'){ $step='2fa'; }
 ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Ingresar · Admin Larr Eléctrico</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0a1730">
@@ -85,6 +102,8 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;color:var(--i
 .go.busy .spin{display:block}.go.busy .lbl,.go.busy svg.ar{display:none}
 .hint{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:var(--mut2);margin-top:20px}
 .hint svg{width:14px;height:14px}
+.backlink{display:block;text-align:center;margin-top:18px;font-size:13px;color:var(--mut2);text-decoration:none}
+.backlink:hover{color:var(--mut);text-decoration:underline}
 /* responsive */
 @media(max-width:760px){
  body{padding:0;place-items:stretch}
@@ -113,6 +132,22 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;color:var(--i
   <div class="bfoot">© <?=date('Y')?> Larr Eléctrico · Uruguay</div>
  </div>
  <div class="form">
+<?php if($step==='2fa'): ?>
+  <h1>Verificación 🔐</h1>
+  <div class="hi">Ingresá el código de 6 dígitos de tu app autenticadora.</div>
+  <?php if($err):?><div class="err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><?=e($err)?></div><?php endif;?>
+  <div class="fld">
+   <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+   <input type="text" name="code" id="code" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder=" " required autofocus style="letter-spacing:.42em;font-weight:700;text-align:center;font-size:19px">
+   <label for="code">Código</label>
+  </div>
+  <button class="go" id="goBtn" type="submit">
+   <span class="shine"></span><span class="spin"></span>
+   <span class="lbl">Verificar</span>
+   <svg class="ar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </button>
+  <a href="login.php?reset=1" class="backlink">← Usar otra cuenta</a>
+<?php else: ?>
   <h1>Bienvenido 👋</h1>
   <div class="hi">Ingresá con tus credenciales de administrador.</div>
   <?php if($err):?><div class="err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><?=e($err)?></div><?php endif;?>
@@ -135,6 +170,7 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;color:var(--i
    <svg class="ar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
   </button>
   <div class="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Acceso exclusivo para administradores</div>
+<?php endif; ?>
  </div>
 </form>
 <script>

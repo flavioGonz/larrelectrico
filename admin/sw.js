@@ -1,5 +1,5 @@
 ﻿/* Larr Admin PWA service worker */
-const BUILD = '1792877910'; /* sello estampado en cada deploy */
+const BUILD = '1792878544'; /* sello estampado en cada deploy */
 const VER = 'larradmin-' + BUILD;
 const STATIC = VER + '-static';
 const PRECACHE = [

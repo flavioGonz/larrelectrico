@@ -2,7 +2,16 @@
 session_start();
 $CFG=require(__DIR__.'/../config.php');
 function db(){ static $p=null; global $CFG; if($p===null){ $p=new PDO("mysql:host={$CFG['db_host']};dbname={$CFG['db_name']};charset=utf8mb4",$CFG['db_user'],$CFG['db_pass'],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]); } return $p; }
-(function(){ global $CFG; try{ $pdo=db(); $pdo->exec("CREATE TABLE IF NOT EXISTS settings(k VARCHAR(60) PRIMARY KEY, v TEXT) DEFAULT CHARSET=utf8mb4"); foreach($pdo->query("SELECT k,v FROM settings") as $r){ if($r['k']==='pay_methods'){ $d=json_decode($r['v'],true); if(is_array($d))$CFG['pay_methods']=$d; continue;} $CFG[$r['k']]=$r['v']; } }catch(Exception $e){} })();
+(function(){ global $CFG; try{ $pdo=db(); $pdo->exec("CREATE TABLE IF NOT EXISTS settings(k VARCHAR(60) PRIMARY KEY, v TEXT) DEFAULT CHARSET=utf8mb4"); foreach($pdo->query("SELECT k,v FROM settings") as $r){ if($r['k']==='pay_methods'){ $d=json_decode($r['v'],true); if(is_array($d))$CFG['pay_methods']=$d; continue;} $CFG[$r['k']]=$r['v']; }
+  // migraciones de seguridad (2FA / passkey / push) — se crean una sola vez
+  $cols=[]; try{ foreach($pdo->query("SHOW COLUMNS FROM users") as $c){ $cols[$c['Field']]=1; } }catch(Exception $e){}
+  if($cols){
+   if(!isset($cols['totp_secret']))  try{ $pdo->exec("ALTER TABLE users ADD COLUMN totp_secret VARCHAR(64) NULL"); }catch(Exception $e){}
+   if(!isset($cols['totp_enabled'])) try{ $pdo->exec("ALTER TABLE users ADD COLUMN totp_enabled TINYINT(1) NOT NULL DEFAULT 0"); }catch(Exception $e){}
+  }
+  try{ $pdo->exec("CREATE TABLE IF NOT EXISTS webauthn_creds(id INT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, cred_id VARCHAR(255) NOT NULL, public_key TEXT NOT NULL, sign_count BIGINT NOT NULL DEFAULT 0, label VARCHAR(80) NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_cred(cred_id)) DEFAULT CHARSET=utf8mb4"); }catch(Exception $e){}
+  try{ $pdo->exec("CREATE TABLE IF NOT EXISTS push_subs(id INT AUTO_INCREMENT PRIMARY KEY, user_id INT NULL, endpoint VARCHAR(512) NOT NULL, p256dh VARCHAR(255) NOT NULL, auth VARCHAR(255) NOT NULL, ua VARCHAR(255) NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_ep(endpoint)) DEFAULT CHARSET=utf8mb4"); }catch(Exception $e){}
+ }catch(Exception $e){} })();
 function e($s){ return htmlspecialchars((string)$s,ENT_QUOTES,'UTF-8'); }
 function money($n){ return $n===null?'—':'$'.number_format((float)$n,2,',','.'); }
 function imgu($u){ global $CFG; if(!$u)return null; return strpos($u,'http')===0?$u:$CFG['img_base'].ltrim($u,'/'); }
