@@ -31,7 +31,9 @@ const IC={
  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
  heart:'<path d="M12 21C5 15.5 3 11.5 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5c0 3-2 7-9 12.5z"/>',
  fire:'<path d="M12 3c1 3 4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 1-3 .5 2 2 2 2 0 0-2-1-3 1-5z"/>',
- home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'
+ home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+ eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ check:'<path d="M20 6 9 17l-5-5"/>',lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
 };
 const svg=(n,w=20)=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="${w}" height="${w}">${IC[n]||IC.pkg}</svg>`;
 const catIcon=name=>{const n=name.toUpperCase();
@@ -199,8 +201,19 @@ const cuenta=head('Mi cuenta — Larr Eléctrico','Ingresá o creá tu cuenta en
 <div class="authmain"><div id="authRoot"><div class="auth">
 <div class="tabs"><button class="on" data-t="login">Ingresar</button><button data-t="reg">Crear cuenta</button></div>
 <div class="msg" id="authMsg"></div>
-<form id="formLogin"><div class="field"><label>Email</label><input id="liEmail" type="email" required></div><div class="field"><label>Contraseña</label><input id="liPass" type="password" required></div><button class="btn btn-pri btn-block btn-lg">Ingresar</button></form>
-<form id="formReg" style="display:none"><div class="field"><label>Nombre</label><input id="rgName" required></div><div class="field"><label>Email</label><input id="rgEmail" type="email" required></div><div class="field"><label>Teléfono (opcional)</label><input id="rgPhone"></div><div class="field"><label>Contraseña</label><input id="rgPass" type="password" required></div><button class="btn btn-pri btn-block btn-lg">Crear cuenta</button></form>
+<form id="formLogin">
+<div class="field"><label>Email</label><input id="liEmail" type="email" placeholder="tu@email.com" autocomplete="email" required></div>
+<div class="field"><label>Contraseña</label><div class="pwwrap"><input id="liPass" type="password" autocomplete="current-password" required><button type="button" class="pwtog" data-tog="liPass">${svg('eye',18)}</button></div></div>
+<button class="btn btn-pri btn-block btn-lg">${svg('user',18)} Ingresar</button>
+<div class="auth-alt"><a href="https://wa.me/59894726950?text=${encodeURIComponent('Hola! Necesito recuperar el acceso a mi cuenta de la tienda.')}">¿Olvidaste tu contraseña?</a></div></form>
+<form id="formReg" style="display:none">
+<div class="field"><label>Nombre y apellido</label><input id="rgName" placeholder="Ej. Juan Pérez" autocomplete="name" required></div>
+<div class="field"><label>Email</label><input id="rgEmail" type="email" placeholder="tu@email.com" autocomplete="email" required><span class="field-hint" id="rgEmailHint"></span></div>
+<div class="field"><label>Teléfono <span class="opt">(opcional)</span></label><input id="rgPhone" placeholder="099 123 456" autocomplete="tel"></div>
+<div class="field"><label>Contraseña</label><div class="pwwrap"><input id="rgPass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required><button type="button" class="pwtog" data-tog="rgPass">${svg('eye',18)}</button></div><div class="pwmeter" id="pwMeter"><span></span></div><div class="pwlabel" id="pwLabel"></div></div>
+<label class="auth-terms"><input type="checkbox" id="rgTerms"><span>Acepto que Larr Eléctrico me contacte para coordinar mis pedidos y consultas.</span></label>
+<button class="btn btn-pri btn-block btn-lg" id="rgBtn">${svg('check',18)} Crear mi cuenta</button>
+<p class="auth-foot">${svg('lock',14)} Tus datos están protegidos y no se comparten con terceros.</p></form>
 </div></div></div></div></div></section>`+footer+foot;
 
 const favoritos=head('Favoritos — Larr Eléctrico','Tus productos favoritos en Larr Eléctrico.')+header+`<section class="sec" style="padding:34px 0 70px"><div class="wrap">

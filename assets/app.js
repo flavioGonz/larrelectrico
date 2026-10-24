@@ -321,17 +321,36 @@ async function initProduct(){
   const relbox=el('#rel');relbox.innerHTML=(rel.length?rel:d.products.filter(x=>x.id!==p.id).slice(0,4)).map(pcard).join('');wireCards(relbox);
 }
 /* AUTH */
+function pwScore(p){let s=0;if(!p)return 0;if(p.length>=6)s++;if(p.length>=10)s++;if(/[A-Z]/.test(p)&&/[a-z]/.test(p))s++;if(/\d/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;return Math.min(s,4);}
 async function initAuth(){
   const r=await fetch(API+'auth.php?action=me').then(r=>r.json()).catch(()=>({}));
   if(r.user){ window.LARR_USER=r.user; renderAccountLanding(r.user); return; }
-  const tab=w=>{els('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===w));el('#formLogin').style.display=w==='login'?'block':'none';el('#formReg').style.display=w==='reg'?'block':'none';};
+  const tab=w=>{els('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===w));el('#formLogin').style.display=w==='login'?'block':'none';el('#formReg').style.display=w==='reg'?'block':'none';el('#authMsg').className='msg';};
   els('.tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
-  el('#formLogin').onsubmit=async ev=>{ev.preventDefault();const m=el('#authMsg');m.className='msg';
-    const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',email:el('#liEmail').value,pass:el('#liPass').value})}).then(r=>r.json());
-    if(res.error){m.className='msg err';m.textContent=res.error;}else location.reload();};
+  if(new URLSearchParams(location.search).get('reg')==='1')tab('reg');
+  // mostrar / ocultar contraseña
+  els('.pwtog').forEach(b=>b.onclick=()=>{const i=el('#'+b.dataset.tog);if(!i)return;i.type=i.type==='password'?'text':'password';b.classList.toggle('on',i.type==='text');});
+  // medidor de fuerza
+  const rp=el('#rgPass');
+  if(rp)rp.addEventListener('input',()=>{const s=pwScore(rp.value);const m=el('#pwMeter'),lb=el('#pwLabel');if(m)m.dataset.s=s;const L=['','Débil','Aceptable','Buena','Fuerte'];if(lb){lb.textContent=rp.value?L[s]:'';lb.dataset.s=s;}});
+  // validación de email en vivo
+  const re=el('#rgEmail'),rh=el('#rgEmailHint');
+  if(re)re.addEventListener('input',()=>{if(!rh)return;const v=re.value.trim();if(!v){rh.textContent='';rh.className='field-hint';return;}const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);rh.textContent=ok?'✓ Email válido':'Revisá el formato del email';rh.className='field-hint '+(ok?'ok':'err');});
+  el('#formLogin').onsubmit=async ev=>{ev.preventDefault();const m=el('#authMsg');m.className='msg';const btn=ev.target.querySelector('button');const t=btn.innerHTML;btn.disabled=true;btn.innerHTML='Ingresando…';
+    const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',email:el('#liEmail').value,pass:el('#liPass').value})}).then(r=>r.json()).catch(()=>({error:'Error de red'}));
+    if(res.error){m.className='msg err';m.textContent=res.error;btn.disabled=false;btn.innerHTML=t;}else location.reload();};
   el('#formReg').onsubmit=async ev=>{ev.preventDefault();const m=el('#authMsg');m.className='msg';
-    const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',name:el('#rgName').value,email:el('#rgEmail').value,phone:el('#rgPhone').value,pass:el('#rgPass').value})}).then(r=>r.json());
-    if(res.error){m.className='msg err';m.textContent=res.error;}else location.reload();};
+    const name=el('#rgName').value.trim(),email=el('#rgEmail').value.trim(),phone=el('#rgPhone').value.trim(),pass=el('#rgPass').value;
+    if(!name){m.className='msg err';m.textContent='Ingresá tu nombre y apellido.';return;}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){m.className='msg err';m.textContent='Ingresá un email válido.';return;}
+    if(pass.length<6){m.className='msg err';m.textContent='La contraseña debe tener al menos 6 caracteres.';return;}
+    if(el('#rgTerms')&&!el('#rgTerms').checked){m.className='msg err';m.textContent='Tenés que aceptar que te contactemos para continuar.';return;}
+    const btn=el('#rgBtn');const t=btn.innerHTML;btn.disabled=true;btn.innerHTML='Creando tu cuenta…';
+    const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',name,email,phone,pass})}).then(r=>r.json()).catch(()=>({error:'Error de red'}));
+    if(res.error){m.className='msg err';m.textContent=res.error;btn.disabled=false;btn.innerHTML=t;return;}
+    window.LARR_USER=res.user;
+    el('#authRoot').innerHTML=`<div class="auth-success"><div class="as-ic">${svg('check',36)}</div><h2>¡Cuenta creada!</h2><p>Te damos la bienvenida, ${esc2((name||'').split(' ')[0])}. Te enviamos un correo de confirmación a <b>${esc2(email)}</b>.</p><a class="btn btn-pri btn-block btn-lg" href="index.html">${svg('cart',18)} Empezar a comprar</a><button class="btn btn-ghost btn-block" id="asAcct">Ver mi cuenta</button></div>`;
+    const ab=el('#asAcct');if(ab)ab.onclick=()=>openAcct();};
 }
 const PAYLBL={transfer:'Transferencia / Giro',giros:'Giros Redpagos / Abitab',cod:'Pago contra entrega',pickup:'Retira en local',mp:'Mercado Pago'};
 const ORD_STEPS=['nuevo','pagado','en proceso','enviado','entregado'];
