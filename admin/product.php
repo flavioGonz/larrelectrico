@@ -89,7 +89,7 @@ ah($isNew?'Nuevo producto':'Editar producto');
  </div></div>
  <div class="panel"><div class="ph"><h2>Marca / Vendor</h2></div><div style="padding:16px 20px">
   <div class="field"><label>Marca (texto)</label><input class="inp" name="brand" value="<?=e($p['brand'])?>"></div>
-  <div class="field"><label>Vendor</label><select class="inp" name="vendor_id"><option value="">— Sin vendor —</option><?php foreach($vendors as $v):?><option value="<?=$v['id']?>" <?=$p['vendor_id']==$v['id']?'selected':''?>><?=e($v['name'])?></option><?php endforeach;?></select></div>
+  <div class="field"><label>Vendor</label><select class="inp sel2" name="vendor_id"><option value="">— Sin vendor —</option><?php foreach($vendors as $v):?><option value="<?=$v['id']?>" <?=$p['vendor_id']==$v['id']?'selected':''?>><?=e($v['name'])?></option><?php endforeach;?></select></div>
  </div></div>
  <div class="panel"><div class="ph"><h2>Categorías</h2></div><div style="padding:14px 20px;max-height:300px;overflow:auto">
   <?php foreach($cats as $c):?><label style="display:flex;align-items:center;gap:9px;padding:5px 0;font-size:13.5px;cursor:pointer"><input type="checkbox" name="cats[]" value="<?=$c['id']?>" <?=in_array($c['id'],$pcats)?'checked':''?>> <?=e($c['name'])?></label><?php endforeach;?>

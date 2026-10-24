@@ -56,7 +56,7 @@ if($view){ $o=$pdo->query("SELECT * FROM orders WHERE id=$view")->fetch();
    <?php if(!empty($meta['note'])):?><div style="margin-top:10px;padding:10px 12px;background:var(--bg);border-radius:9px;font-size:13px;color:var(--ink)"><b>Nota:</b> <?=e($meta['note'])?></div><?php endif;?>
   </div></div>
   <div class="panel"><div class="ph"><h2>Estado</h2></div><form method="post" style="padding:16px 20px"><input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="id" value="<?=$view?>"><input type="hidden" name="view" value="1">
-   <select class="inp" name="status" style="margin-bottom:12px"><?php foreach($ESTADOS as $s):?><option <?=$o['status']===$s?'selected':''?>><?=$s?></option><?php endforeach;?></select>
+   <select class="inp sel2" name="status" style="margin-bottom:12px"><?php foreach($ESTADOS as $s):?><option <?=$o['status']===$s?'selected':''?>><?=$s?></option><?php endforeach;?></select>
    <button class="btn btn-pri btn-block" style="width:100%;justify-content:center">Actualizar estado</button>
    <p style="font-size:12px;color:var(--mut2);margin-top:10px;line-height:1.5">Al marcar <b>entregado</b> se descuenta el stock y se suman las ventas. Cancelar un pedido entregado reintegra el stock.</p></form></div></div>
   </div>

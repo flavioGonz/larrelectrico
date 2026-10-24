@@ -2,6 +2,7 @@
 session_start();
 $CFG=require(__DIR__.'/../config.php');
 function db(){ static $p=null; global $CFG; if($p===null){ $p=new PDO("mysql:host={$CFG['db_host']};dbname={$CFG['db_name']};charset=utf8mb4",$CFG['db_user'],$CFG['db_pass'],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]); } return $p; }
+(function(){ global $CFG; try{ $pdo=db(); $pdo->exec("CREATE TABLE IF NOT EXISTS settings(k VARCHAR(60) PRIMARY KEY, v TEXT) DEFAULT CHARSET=utf8mb4"); foreach($pdo->query("SELECT k,v FROM settings") as $r){ if($r['k']==='pay_methods'){ $d=json_decode($r['v'],true); if(is_array($d))$CFG['pay_methods']=$d; continue;} $CFG[$r['k']]=$r['v']; } }catch(Exception $e){} })();
 function e($s){ return htmlspecialchars((string)$s,ENT_QUOTES,'UTF-8'); }
 function money($n){ return $n===null?'—':'$'.number_format((float)$n,2,',','.'); }
 function imgu($u){ global $CFG; if(!$u)return null; return strpos($u,'http')===0?$u:$CFG['img_base'].ltrim($u,'/'); }
@@ -25,5 +26,6 @@ function ico($n,$s=18){ $P=[
  'video'=>'<rect x="3" y="5" width="14" height="14" rx="2"/><path d="m21 7-4 3 4 3z"/>','chev'=>'<path d="m9 6 6 6-6 6"/>','edit'=>'<path d="M4 20h4L18 10l-4-4L4 16z"/><path d="m13 5 4 4"/>',
  'bolt'=>'<path d="M13 2 3 14h7l-1 8 10-12h-7z"/>','eye'=>'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
  'image'=>'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="m4 18 5-5 4 4 3-3 4 4"/>','file'=>'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/>',
- 'bell'=>'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'
+ 'bell'=>'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+ 'cog'=>'<circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>','card'=>'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>','key'=>'<circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M18 5l2 2M15 8l2 2"/>'
  ]; return '<svg viewBox="0 0 24 24" width="'.$s.'" height="'.$s.'" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'.($P[$n]??$P['box']).'</svg>'; }

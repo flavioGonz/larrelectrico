@@ -9,6 +9,11 @@ function money($n){ if($n===null||$n==='') return null; return '$'.number_format
 function img_url($u){ global $CFG; if(!$u) return null; return (strpos($u,'http')===0)?$u:$CFG['img_base'].ltrim($u,'/'); }
 function slugify($s){ $s=iconv('UTF-8','ASCII//TRANSLIT//IGNORE',$s); $s=preg_replace('/[^a-zA-Z0-9]+/','-',strtolower($s)); return trim($s,'-'); }
 function user(){ return $_SESSION['user'] ?? null; }
+// Overrides de configuración editables desde el admin (tabla settings)
+function load_settings(){ global $CFG; try{ $pdo=db(); $pdo->exec("CREATE TABLE IF NOT EXISTS settings(k VARCHAR(60) PRIMARY KEY, v TEXT) DEFAULT CHARSET=utf8mb4");
+  foreach($pdo->query("SELECT k,v FROM settings") as $r){ $v=$r['v']; if($r['k']==='pay_methods'){ $d=json_decode($v,true); if(is_array($d)) $CFG['pay_methods']=$d; continue; } $CFG[$r['k']]=$v; }
+}catch(Exception $e){} }
+load_settings();
 function cat_icon($name){
   $n=mb_strtoupper($name,'UTF-8');
   if(preg_match('/CABLE|GOMA|SUPER|CONDUCT|FLEX|UNIPOLAR/',$n)) return 'cable';

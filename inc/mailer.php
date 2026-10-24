@@ -22,8 +22,9 @@ function mail_shell($inner){
 function mail_send($to,$subject,$inner){
   global $CFG;
   $from=$CFG['mail_from']??'no-reply@larrelectrico.uy'; $fromName=$CFG['mail_from_name']??'Larr Eléctrico';
+  $reply=$CFG['mail_reply']??$from;
   $html=mail_shell($inner);
-  $h="MIME-Version: 1.0\r\n"."Content-Type: text/html; charset=UTF-8\r\n"."From: ".$fromName." <".$from.">\r\n"."Reply-To: ".$from."\r\n";
+  $h="MIME-Version: 1.0\r\n"."Content-Type: text/html; charset=UTF-8\r\n"."From: ".$fromName." <".$from.">\r\n"."Reply-To: ".$reply."\r\n";
   return @mail($to,'=?UTF-8?B?'.base64_encode($subject).'?=',$html,$h);
 }
 function mail_h1($t){ return '<h1 style="font-size:22px;font-weight:800;color:#1d1d1f;margin:0 0 6px;letter-spacing:-.4px">'.$t.'</h1>'; }

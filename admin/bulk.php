@@ -123,7 +123,7 @@ ah('Edición masiva');
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
  <div class="panel"><div class="ph"><h2>Ajuste de precios por %</h2></div><form method="post" style="padding:16px 20px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap"><input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="act" value="pct">
   <div><label>% de ajuste</label><input class="inp" name="pct" type="number" step="0.1" placeholder="ej. 10 o -5" style="width:120px" required></div>
-  <div style="flex:1"><label>Aplicar a</label><select class="inp" name="scope"><option value="all">Todos los productos</option><?php foreach($cats as $c):?><option value="<?=$c['id']?>"><?=e($c['name'])?></option><?php endforeach;?></select></div>
+  <div style="flex:1"><label>Aplicar a</label><select class="inp sel2" name="scope"><option value="all">Todos los productos</option><?php foreach($cats as $c):?><option value="<?=$c['id']?>"><?=e($c['name'])?></option><?php endforeach;?></select></div>
   <button class="btn btn-pri" onclick="return confirm('¿Ajustar precios? Modifica la base.')"><?=ico('save',16)?>Aplicar</button></form></div>
  <div class="panel"><div class="ph"><h2>Planilla Excel</h2></div><div style="padding:16px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
   <a class="btn btn-pri" href="bulk.php?export=xlsx"><?=ico('save',16)?>Exportar a Excel (.xlsx)</a>
@@ -132,7 +132,7 @@ ah('Edición masiva');
 </div>
 <div class="panel"><div class="ph"><h2>Edición en línea</h2></div><div style="padding:14px 20px">
 <form class="toolbar" method="get"><div class="srch"><?=ico('search')?><input name="q" value="<?=e($q)?>" placeholder="Buscar productos para editar…"></div>
-<select class="inp" name="cat" style="max-width:240px" onchange="this.form.submit()"><option value="">— Elegí categoría —</option><?php foreach($cats as $c):?><option value="<?=$c['id']?>" <?=$fcat==$c['id']?'selected':''?>><?=e($c['name'])?></option><?php endforeach;?></select>
+<select class="inp sel2" name="cat" style="max-width:240px" onchange="this.form.submit()"><option value="">— Elegí categoría —</option><?php foreach($cats as $c):?><option value="<?=$c['id']?>" <?=$fcat==$c['id']?'selected':''?>><?=e($c['name'])?></option><?php endforeach;?></select>
 <button class="btn btn-g">Filtrar</button></form>
 <?php if(!$rows):?><div style="padding:30px;text-align:center;color:var(--mut2)">Elegí una categoría o buscá para editar varios productos a la vez.</div>
 <?php else:?>

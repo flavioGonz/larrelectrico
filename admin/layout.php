@@ -1,6 +1,6 @@
 <?php
 function ah($title){ $u=admin(); $cur=basename($_SERVER['PHP_SELF']);
- $nav=[['index.php','dash','Dashboard'],['products.php','box','Productos'],['bulk.php','edit','Edición masiva'],['categories.php','grid','Categorías'],['vendors.php','tag','Vendors'],['orders.php','cart','Pedidos'],['carts.php','bell','Carritos abandonados'],['reviews.php','star','Reseñas'],['customers.php','users','Clientes']];
+ $nav=[['index.php','dash','Dashboard'],['products.php','box','Productos'],['bulk.php','edit','Edición masiva'],['categories.php','grid','Categorías'],['vendors.php','tag','Vendors'],['orders.php','cart','Pedidos'],['carts.php','bell','Carritos abandonados'],['reviews.php','star','Reseñas'],['customers.php','users','Clientes'],['settings.php','cog','Configuración']];
  ob_start(); ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?=e($title)?> · Admin Larr Eléctrico</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -69,6 +69,26 @@ body.leaving .wrapc{opacity:0;transform:translateY(-7px);transition:opacity .14s
 .panel{animation:admin-in .42s cubic-bezier(.16,1,.3,1) both}
 .cards .kpi{animation:admin-in .44s cubic-bezier(.16,1,.3,1) both}
 .cards .kpi:nth-child(2){animation-delay:.05s}.cards .kpi:nth-child(3){animation-delay:.1s}.cards .kpi:nth-child(4){animation-delay:.15s}
+/* ===== combobox con búsqueda (reemplaza selects) ===== */
+.ms{position:relative}
+.ms-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px;color:var(--ink);cursor:pointer;text-align:left;transition:.15s}
+.ms-btn:hover{border-color:var(--mut2)}
+.ms.on .ms-btn{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,113,227,.1)}
+.ms-btn>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.ms-btn svg{width:16px;height:16px;color:var(--mut2);flex-shrink:0;transition:.2s}
+.ms.on .ms-btn svg{transform:rotate(180deg);color:var(--blue)}
+.ms-pan{position:absolute;top:calc(100% + 6px);left:0;right:0;min-width:220px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 44px -14px rgba(0,0,0,.28);z-index:40;opacity:0;visibility:hidden;transform:translateY(-6px);transition:.16s;overflow:hidden}
+.ms.on .ms-pan{opacity:1;visibility:visible;transform:none}
+.ms-srch{padding:8px;border-bottom:1px solid var(--line);position:relative}
+.ms-srch svg{position:absolute;left:17px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--mut2)}
+.ms-srch input{width:100%;padding:8px 11px 8px 34px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;outline:none}
+.ms-srch input:focus{border-color:var(--blue)}
+.ms-list{max-height:262px;overflow:auto;padding:6px}
+.ms-op{padding:9px 11px;border-radius:8px;font-size:13.5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+.ms-op:hover{background:var(--bg)}
+.ms-op.on{background:#eef4ff;color:var(--blue);font-weight:600}
+.ms-op .ck{margin-left:auto;opacity:0}.ms-op.on .ck{opacity:1}
+.ms-empty{padding:16px;text-align:center;color:var(--mut2);font-size:13px}
 </style></head><body><div class="app">
 <aside class="side"><div class="lg"><span class="b"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span>Larr<span style="color:#7db5ff">Admin</span></div>
 <?php foreach($nav as $x):?><a href="<?=$x[0]?>" class="<?=$cur===$x[0]?'on':''?>"><?=ico($x[1])?><?=$x[2]?></a><?php endforeach;?>
@@ -87,6 +107,39 @@ function af(){ echo '</div></div></div>
   setTimeout(function(){ location.href=href; },150);
  });
  window.addEventListener("pageshow",function(ev){ if(ev.persisted)document.body.classList.remove("leaving"); });
+})();
+/* ===== combobox con búsqueda: mejora todos los <select class=sel2> ===== */
+(function(){
+ var CHEV="<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m6 9 6 6 6-6\"/></svg>";
+ var CK="<svg class=\"ck\" viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg>";
+ var SR="<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m21 21-4.3-4.3\"/></svg>";
+ function enhance(sel){
+  if(sel.dataset.enh)return; sel.dataset.enh="1"; sel.style.display="none";
+  var wrap=document.createElement("div"); wrap.className="ms"; sel.parentNode.insertBefore(wrap,sel.nextSibling);
+  var btn=document.createElement("button"); btn.type="button"; btn.className="ms-btn";
+  var pan=document.createElement("div"); pan.className="ms-pan";
+  pan.innerHTML="<div class=\"ms-srch\">"+SR+"<input type=\"text\" placeholder=\"Buscar…\"></div><div class=\"ms-list\"></div>";
+  wrap.appendChild(btn); wrap.appendChild(pan);
+  var list=pan.querySelector(".ms-list"), inp=pan.querySelector("input");
+  function opts(){ return [].slice.call(sel.options); }
+  function label(){ var o=sel.options[sel.selectedIndex]; btn.innerHTML="<span>"+(o?o.textContent:"")+"</span>"+CHEV; }
+  function render(q){ q=(q||"").toLowerCase(); list.innerHTML="";
+   opts().forEach(function(o){ if(q&&o.textContent.toLowerCase().indexOf(q)<0)return;
+    var it=document.createElement("div"); it.className="ms-op"+(o.selected?" on":""); it.innerHTML="<span>"+o.textContent+"</span>"+CK;
+    it.onclick=function(){ sel.value=o.value; try{sel.dispatchEvent(new Event("change",{bubbles:true}));}catch(e){} label(); close(); };
+    list.appendChild(it); });
+   if(!list.children.length)list.innerHTML="<div class=\"ms-empty\">Sin resultados</div>";
+  }
+  function open(){ wrap.classList.add("on"); inp.value=""; render(""); setTimeout(function(){inp.focus();},10); }
+  function close(){ wrap.classList.remove("on"); }
+  btn.onclick=function(e){ e.preventDefault(); wrap.classList.contains("on")?close():open(); };
+  inp.oninput=function(){ render(inp.value); };
+  inp.onclick=function(e){ e.stopPropagation(); };
+  document.addEventListener("click",function(e){ if(!wrap.contains(e.target))close(); });
+  label();
+ }
+ function scan(){ [].slice.call(document.querySelectorAll("select.sel2")).forEach(enhance); }
+ scan();
 })();
 </script>
 </body></html>'; }
