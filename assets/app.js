@@ -42,7 +42,14 @@ let DATA=null;
 async function getData(){ if(DATA)return DATA; try{const r=await fetch('/final/api/catalog.php');DATA=await r.json();}catch(e){const r=await fetch('/final/catalog.json');DATA=await r.json();} return DATA; }
 /* CART */
 let CART=JSON.parse(localStorage.getItem('larr_cart')||'[]');
-const saveCart=()=>{localStorage.setItem('larr_cart',JSON.stringify(CART));renderCart();};
+const saveCart=()=>{localStorage.setItem('larr_cart',JSON.stringify(CART));renderCart();syncCart();};
+window.LARR_USER=null; let _cartSyncT;
+function syncCart(){ if(!window.LARR_USER)return; clearTimeout(_cartSyncT);
+  _cartSyncT=setTimeout(()=>{ fetch(API+'cart_save.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:CART.map(c=>({id:c.id,qty:c.qty,name:c.name,price:c.price,img:c.img}))})}).catch(()=>{}); },1500); }
+async function recoverCart(){ const p=new URLSearchParams(location.search); const id=p.get('recover'), t=p.get('t'); if(!id||!t)return;
+  try{ const r=await fetch(API+'cart_get.php?id='+encodeURIComponent(id)+'&t='+encodeURIComponent(t)).then(r=>r.json());
+    if(r.ok&&r.items&&r.items.length){ r.items.forEach(it=>{ if(!CART.find(c=>c.id===it.id)) CART.push({id:it.id,qty:it.qty,name:it.name,price:it.price,img:it.img,sku:it.sku||''}); }); saveCart(); setTimeout(openCart,500); toast('Recuperamos tu carrito'); } }catch(e){}
+  history.replaceState({},'',location.pathname); }
 function addCart(p,q=1){const it=CART.find(c=>c.id===p.id);if(it)it.qty+=q;else CART.push({id:p.id,qty:q,name:p.name,price:p.price,img:(p.images&&p.images[0])||p.img,sku:p.sku});saveCart();toast(T.add);}
 function setQty(id,q){const it=CART.find(c=>c.id===id);if(!it)return;it.qty=q;if(it.qty<1)CART=CART.filter(c=>c.id!==id);saveCart();}
 function renderCart(){
@@ -401,7 +408,11 @@ async function initHeader(){
   if(mm)mm.innerHTML=cats.map(c=>`<a href="catalogo.html?cat=${encodeURIComponent(c.name)}"><span class="mi">${svg(catIcon(c.name),17)}</span><span>${c.name}</span><span class="mc">${c.n}</span></a>`).join('')+`<a class="mall" href="catalogo.html">Ver todo el catálogo</a>`;
   const b=el('#burger'); if(b)b.onclick=()=>openMobMenu(cats);
   initLiveSearch(d);
-  try{const me=await fetch(API+'auth.php?action=me').then(r=>r.json());const nu=el('#navUser');if(me&&me.user&&me.user.avatar&&nu){nu.classList.add('hasav');nu.innerHTML='<img id="navUserImg" src="'+imgu(me.user.avatar)+'">';}}catch(e){}
+  try{const me=await fetch(API+'auth.php?action=me').then(r=>r.json());
+    window.LARR_USER=(me&&me.user)?me.user:null;
+    const nu=el('#navUser');if(window.LARR_USER&&window.LARR_USER.avatar&&nu){nu.classList.add('hasav');nu.innerHTML='<img id="navUserImg" src="'+imgu(window.LARR_USER.avatar)+'">';}
+    if(window.LARR_USER&&CART.length)syncCart();
+  }catch(e){}
 }
 function initLiveSearch(d){
   const form=document.querySelector('.navsearch'); const inp=form&&form.querySelector('input'); if(!inp)return;
@@ -476,5 +487,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(el('#authRoot'))initAuth();
   if(el('#favGrid'))initFav();
   if(el('#cmpRoot'))initCompare();
+  recoverCart();
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCart();});
 });

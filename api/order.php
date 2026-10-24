@@ -38,5 +38,6 @@ try{
  $pdo->prepare("INSERT INTO orders(user_id,customer,email,phone,total,items,status,created) VALUES(?,?,?,?,?,?,'nuevo',NOW())")
      ->execute([$u['id']??null,$cust,$email,$phone,$pagar,json_encode($payload,JSON_UNESCAPED_UNICODE)]);
  $oid=$pdo->lastInsertId();
+ if(!empty($u['id'])){ try{ $pdo->prepare("DELETE FROM carts WHERE user_id=?")->execute([$u['id']]); }catch(Exception $e){} } // carrito convertido → sin recordatorio
  echo json_encode(['ok'=>true,'order'=>(int)$oid,'subtotal'=>$subtotal,'iva'=>$iva,'total'=>$total,'discount'=>$disc,'discount_amt'=>$disc_amt,'total_pagar'=>$pagar,'lines'=>$lines,'warnings'=>$warn]);
 }catch(Exception $e){ http_response_code(500); echo json_encode(['error'=>$e->getMessage()]); }

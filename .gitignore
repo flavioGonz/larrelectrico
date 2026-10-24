@@ -8,6 +8,8 @@ _*.json
 build/deploy.ps1
 build/readcfg.mjs
 build/push.ps1
+build/readmail.mjs
+build/chk.mjs
 build/*.log
 assets/uploads/
 # Build/catalog cache
