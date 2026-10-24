@@ -104,6 +104,12 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;color:var(--i
 .hint svg{width:14px;height:14px}
 .backlink{display:block;text-align:center;margin-top:18px;font-size:13px;color:var(--mut2);text-decoration:none}
 .backlink:hover{color:var(--mut);text-decoration:underline}
+.facebtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:50px;margin-top:12px;border:1.5px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);font-size:14.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:.18s}
+.facebtn:hover{border-color:var(--blue);color:var(--blue)}
+.facebtn:disabled{opacity:.6;cursor:default}
+.facebtn svg{width:21px;height:21px}
+.faceerr{display:none;font-size:12.5px;color:#c81e3c;text-align:center;margin-top:10px}
+.faceerr.on{display:block}
 /* responsive */
 @media(max-width:760px){
  body{padding:0;place-items:stretch}
@@ -169,6 +175,11 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;color:var(--i
    <span class="lbl">Ingresar</span>
    <svg class="ar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
   </button>
+  <button type="button" class="facebtn" id="faceBtn" style="display:none">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V7a5 5 0 0 1 10 0v1"/><rect x="4" y="8" width="16" height="13" rx="3"/><path d="M9 14a3 3 0 0 0 6 0"/><path d="M9.5 12h.01M14.5 12h.01"/></svg>
+   Ingresar con Face ID
+  </button>
+  <div class="faceerr" id="faceErr"></div>
   <div class="hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Acceso exclusivo para administradores</div>
 <?php endif; ?>
  </div>
@@ -181,6 +192,27 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;color:var(--i
  if(tog&&pw){ tog.addEventListener('click',function(){ var s=pw.type==='password'; pw.type=s?'text':'password'; tog.querySelector('svg').innerHTML=s?OFF:EYE; pw.focus(); }); }
  var f=document.getElementById('loginForm'), b=document.getElementById('goBtn');
  if(f&&b){ f.addEventListener('submit',function(){ b.classList.add('busy'); }); }
+ /* ===== Login con Face ID / passkey (WebAuthn) ===== */
+ var fb=document.getElementById('faceBtn'), fe=document.getElementById('faceErr');
+ function ferr(m){ if(fe){ fe.textContent=m; fe.className='faceerr on'; } }
+ function b2b(buf){ var a=new Uint8Array(buf),s=''; for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+ function b2u(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); var p=s.length%4; if(p)s+='='.repeat(4-p); var raw=atob(s),a=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a.buffer; }
+ if(fb && window.PublicKeyCredential){
+   fb.style.display='flex';
+   fb.addEventListener('click',function(){
+     fb.disabled=true; if(fe)fe.className='faceerr';
+     fetch('wa_login.php?act=options').then(function(r){return r.json();}).then(function(opt){
+       opt.challenge=b2u(opt.challenge);
+       opt.allowCredentials=(opt.allowCredentials||[]).map(function(c){return {type:c.type,id:b2u(c.id)};});
+       return navigator.credentials.get({publicKey:opt});
+     }).then(function(as){
+       var body={id:b2b(as.rawId),response:{authenticatorData:b2b(as.response.authenticatorData),clientDataJSON:b2b(as.response.clientDataJSON),signature:b2b(as.response.signature),userHandle:as.response.userHandle?b2b(as.response.userHandle):null}};
+       return fetch('wa_login.php?act=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+     }).then(function(r){return r.json();}).then(function(d){
+       if(d && d.ok){ location.href=d.redirect||'index.php'; } else { ferr('No se pudo verificar la passkey. Usá tu contraseña.'); fb.disabled=false; }
+     }).catch(function(e){ fb.disabled=false; });
+   });
+ }
 })();
 </script>
 <?php pwa_gate(); sw_reg(); ?>

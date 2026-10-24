@@ -4,6 +4,8 @@ config.php
 _export/
 _vmpay.php
 _*.json
+# Endpoints temporales de setup/diagnostico (con claves)
+admin/_*.php
 # Deploy script (contiene token de cPanel)
 build/deploy.ps1
 build/readcfg.mjs

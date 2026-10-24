@@ -96,9 +96,11 @@ ah('Seguridad');
 
  <div class="sec-card">
   <div class="sh"><span class="sec-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v3M7 10V7a5 5 0 0 1 2-4"/><rect x="5" y="10" width="14" height="11" rx="2.5"/><circle cx="12" cy="15.5" r="1.4"/></svg></span><h2>Face ID / Passkey</h2></div>
-  <span class="state off"><span class="d"></span>Próximamente</span>
-  <p class="desc" style="margin-top:14px">Ingreso biométrico con Face ID / huella usando una passkey del dispositivo. Lo activás una vez y entrás sin contraseña.</p>
-  <button class="btn btn-g" disabled style="opacity:.6;cursor:default">En preparación</button>
+  <span class="state off" id="waState"><span class="d"></span>Comprobando…</span>
+  <p class="desc" style="margin-top:14px">Ingreso biométrico con Face ID / huella usando una passkey del dispositivo. Registralo una vez y entrás sin contraseña.</p>
+  <div id="waList" style="margin:0 0 12px"></div>
+  <button class="btn btn-pri" id="waAdd"><?=ico('key',16)?> Registrar Face ID en este dispositivo</button>
+  <div id="waHint" class="desc" style="margin-top:12px;display:none"></div>
  </div>
 
  <div class="sec-card">
@@ -136,6 +138,39 @@ ah('Seguridad');
  function disable(){ navigator.serviceWorker.ready.then(function(reg){ reg.pushManager.getSubscription().then(function(s){ if(s)s.unsubscribe(); setState('Desactivadas',false); if(btn){btn.innerHTML='Activar notificaciones'; btn.removeAttribute('data-on'); btn.className='btn btn-pri';} }); }); }
  if(btn){ btn.addEventListener('click',function(){ btn.getAttribute('data-on')?disable():enable(); }); }
  refresh();
+})();
+</script>
+<script>
+(function(){
+ var addBtn=document.getElementById('waAdd'), st=document.getElementById('waState'), list=document.getElementById('waList'), hint=document.getElementById('waHint');
+ var CSRF='<?=csrf()?>';
+ function setState(t,on){ if(st){ st.className='state '+(on?'on':'off'); st.innerHTML='<span class="d"></span>'+t; } }
+ if(!window.PublicKeyCredential){ setState('No disponible aquí',false); if(addBtn){addBtn.disabled=true;addBtn.style.opacity='.6';} if(hint){hint.style.display='block';hint.textContent='Abrí el panel como app (PWA) en un dispositivo con Face ID / huella.';} return; }
+ function b2b(buf){ var a=new Uint8Array(buf),s=''; for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+ function b2u(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); var p=s.length%4; if(p)s+='='.repeat(4-p); var raw=atob(s),a=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a.buffer; }
+ function esc(s){ return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+ function renderList(creds){
+   if(!list)return;
+   if(!creds||!creds.length){ list.innerHTML=''; return; }
+   var h=''; creds.forEach(function(c){ h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px"><span style="font-size:13.5px;font-weight:500">🔑 '+esc(c.label)+'</span><button class="btn btn-d btn-sm" data-del="'+c.id+'">Quitar</button></div>'; });
+   list.innerHTML=h;
+   list.querySelectorAll('[data-del]').forEach(function(btn){ btn.addEventListener('click',function(){ var fd=new URLSearchParams({csrf:CSRF,act:'delete',id:btn.getAttribute('data-del')}); fetch('wa_reg.php?act=delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd}).then(function(){ load(); }); }); });
+ }
+ function load(){ fetch('wa_reg.php?act=list').then(function(r){return r.json();}).then(function(d){ var n=(d.creds||[]).length; renderList(d.creds); setState(n?('Activo ('+n+')'):'Sin passkeys',n>0); if(addBtn)addBtn.innerHTML=(n?'Registrar otro dispositivo':'<?=addslashes(ico('key',16))?> Registrar Face ID en este dispositivo'); }).catch(function(){ setState('—',false); }); }
+ function register(){
+   addBtn.disabled=true; if(hint)hint.style.display='none';
+   fetch('wa_reg.php?act=options').then(function(r){return r.json();}).then(function(opt){
+     opt.challenge=b2u(opt.challenge); opt.user.id=b2u(opt.user.id);
+     opt.excludeCredentials=(opt.excludeCredentials||[]).map(function(c){return {type:c.type,id:b2u(c.id)};});
+     return navigator.credentials.create({publicKey:opt});
+   }).then(function(cred){
+     var body={id:b2b(cred.rawId),label:(navigator.platform||'Este dispositivo'),response:{attestationObject:b2b(cred.response.attestationObject),clientDataJSON:b2b(cred.response.clientDataJSON)}};
+     return fetch('wa_reg.php?act=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+   }).then(function(r){return r.json();}).then(function(d){ addBtn.disabled=false; if(d&&d.ok){ load(); } else if(hint){ hint.style.display='block'; hint.textContent='No se pudo registrar la passkey. Probá de nuevo.'; } })
+   .catch(function(e){ addBtn.disabled=false; });
+ }
+ if(addBtn)addBtn.addEventListener('click',register);
+ load();
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
