@@ -70,15 +70,14 @@ label{font-size:13px;font-weight:500;color:var(--mut);display:block;margin-botto
 .srch input{border:none;outline:none;width:100%;font-size:14px}.srch svg{width:17px;height:17px;color:var(--mut2)}
 .pag{display:flex;gap:6px;justify-content:center;margin-top:18px}
 .pag a{padding:7px 12px;border:1px solid var(--line);border-radius:9px;font-size:13px;background:#fff}.pag a.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-@media(max-width:820px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}}
 /* ===== transiciones de sección (igual que la portada) ===== */
-.wrapc{animation:admin-in .36s cubic-bezier(.16,1,.3,1) both}
-@keyframes admin-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-body.leaving .wrapc{opacity:0;transform:translateY(-7px);transition:opacity .14s ease,transform .14s ease}
-.side a,.panel,.kpi{transition:.18s}
-.panel{animation:admin-in .42s cubic-bezier(.16,1,.3,1) both}
-.cards .kpi{animation:admin-in .44s cubic-bezier(.16,1,.3,1) both}
-.cards .kpi:nth-child(2){animation-delay:.05s}.cards .kpi:nth-child(3){animation-delay:.1s}.cards .kpi:nth-child(4){animation-delay:.15s}
+.wrapc{animation:admin-in .2s cubic-bezier(.22,1,.36,1) both}
+@keyframes admin-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+body.leaving .wrapc{opacity:0;transform:translateY(-4px);transition:opacity .08s ease,transform .08s ease}
+.side a,.panel,.kpi{transition:.15s}
+.panel{animation:admin-in .22s cubic-bezier(.22,1,.36,1) both}
+.cards .kpi{animation:admin-in .24s cubic-bezier(.22,1,.36,1) both}
+.cards .kpi:nth-child(2){animation-delay:.03s}.cards .kpi:nth-child(3){animation-delay:.06s}.cards .kpi:nth-child(4){animation-delay:.09s}
 /* ===== combobox con búsqueda (reemplaza selects) ===== */
 .ms{position:relative}
 .ms-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px;color:var(--ink);cursor:pointer;text-align:left;transition:.15s}
@@ -108,8 +107,13 @@ body.leaving .wrapc{opacity:0;transform:translateY(-7px);transition:opacity .14s
 .pwa-install{display:none}
 @media(max-width:820px){
  .app{grid-template-columns:1fr}
- .side{position:fixed;left:0;top:0;bottom:0;width:276px;z-index:140;transform:translateX(-100%);transition:transform .3s cubic-bezier(.3,.9,.3,1);height:100vh;overflow:auto;padding-bottom:40px;box-shadow:0 0 60px rgba(0,0,0,.35);display:block}
+ .side{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-height:84vh;z-index:140;transform:translateY(102%);transition:transform .36s cubic-bezier(.32,.72,0,1);height:auto;overflow:auto;-webkit-overflow-scrolling:touch;display:block;border-radius:24px 24px 0 0;padding:8px 12px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -22px 60px rgba(0,0,0,.45)}
  body.nav-open .side{transform:none}
+ .side::before{content:"";display:block;width:42px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);margin:6px auto 10px;flex-shrink:0}
+ .side .lg{display:none}
+ .side a{padding:13px 14px;font-size:15px}
+ .side a svg{width:20px;height:20px}
+ .side .sep{margin:10px 8px}
  .side-ov{display:block;position:fixed;inset:0;background:rgba(5,10,25,.5);backdrop-filter:blur(2px);z-index:130;opacity:0;visibility:hidden;transition:.25s}
  body.nav-open .side-ov{opacity:1;visibility:visible}
  .navtoggle{display:inline-flex}
@@ -124,6 +128,14 @@ body.leaving .wrapc{opacity:0;transform:translateY(-7px);transition:opacity .14s
  .tabbar a.on{color:var(--blue)}
  .tabbar a:active{transform:scale(.9)}
  .pwa-install{display:inline-flex}
+ /* adaptar cada sección a móvil */
+ .grid2{grid-template-columns:1fr}
+ .wrapc{overflow-x:hidden}
+ .panel{overflow:visible}
+ .panel table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+ .toolbar{flex-wrap:wrap}
+ .toolbar .btn{flex:1;justify-content:center}
+ .toolbar .srch{flex-basis:100%;order:-1}
 }
 </style></head><body><div class="app">
 <aside class="side"><div class="lg"><span class="b"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span>Larr<span style="color:#7db5ff">Admin</span></div>
@@ -143,7 +155,7 @@ function af(){ echo '</div></div></div>
   if(a.target==="_blank"||a.hasAttribute("download")||href.charAt(0)==="#"||/^(https?:|mailto:|tel:|javascript:)/.test(href))return;
   if(e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;
   e.preventDefault(); document.body.classList.add("leaving");
-  setTimeout(function(){ location.href=href; },150);
+  setTimeout(function(){ location.href=href; },70);
  });
  window.addEventListener("pageshow",function(ev){ if(ev.persisted)document.body.classList.remove("leaving"); });
 })();

@@ -41,7 +41,7 @@ $docs=$isNew?[]:$pdo->query("SELECT url,name FROM product_docs WHERE product_id=
 $vendors=$pdo->query("SELECT id,name FROM vendors ORDER BY name")->fetchAll();
 ah($isNew?'Nuevo producto':'Editar producto');
 ?>
-<form method="post" style="display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start">
+<form method="post" class="prodform">
 <input type="hidden" name="csrf" value="<?=csrf()?>">
 <div>
  <div class="panel"><div class="ph"><h2>Datos del producto</h2></div><div style="padding:18px 20px">
@@ -100,7 +100,10 @@ ah($isNew?'Nuevo producto':'Editar producto');
 </form>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
-<style>#descrEditor{height:200px}.ql-toolbar.ql-snow,.ql-container.ql-snow{border-color:var(--line)}.ql-toolbar.ql-snow{border-radius:10px 10px 0 0}.ql-container.ql-snow{border-radius:0 0 10px 10px;font-family:Inter;font-size:14px}
+<style>
+.prodform{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
+@media(max-width:820px){.prodform{grid-template-columns:1fr;gap:16px}}
+#descrEditor{height:200px}.ql-toolbar.ql-snow,.ql-container.ql-snow{border-color:var(--line)}.ql-toolbar.ql-snow{border-radius:10px 10px 0 0}.ql-container.ql-snow{border-radius:0 0 10px 10px;font-family:Inter;font-size:14px}
 .dropzone{position:relative;display:flex;align-items:center;gap:14px;padding:18px;border:1.8px dashed var(--line2,#d4d4d8);border-radius:14px;background:var(--bg2,#fafafa);cursor:pointer;transition:.2s;overflow:hidden}
 .dropzone:hover{border-color:#8ab4ff;background:#f5f9ff}
 .dropzone.drag{border-color:#2f6bff;background:#eef4ff;box-shadow:0 0 0 4px rgba(47,107,255,.12)}
