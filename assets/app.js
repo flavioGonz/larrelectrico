@@ -177,7 +177,7 @@ const inCmp=id=>CMP.includes(id);
 function toggleCmp(id,btn){const i=CMP.indexOf(id);if(i<0){if(CMP.length>=4){toast('Podés comparar hasta 4');return;}CMP.push(id);}else CMP.splice(i,1);localStorage.setItem('larr_cmp',JSON.stringify(CMP));if(btn)btn.classList.toggle('on',inCmp(id));document.querySelectorAll('[data-cmp="'+id+'"]').forEach(b=>b.classList.toggle('on',inCmp(id)));renderCmpBar();}
 function renderCmpBar(){let bar=el('#cmpBar');if(!CMP.length){if(bar)bar.classList.remove('on');return;}
   if(!bar){bar=document.createElement('div');bar.id='cmpBar';bar.className='cmpbar';document.body.appendChild(bar);}
-  bar.innerHTML=`<div class="cmpbar-in"><span class="cmpbar-t">${svg('scale',18)} Comparar <b>${CMP.length}</b></span><div style="flex:1"></div><button class="btn btn-g btn-sm" onclick="clearCmp()">Limpiar</button><a class="btn btn-pri btn-sm" href="comparador.html">Ver comparación</a></div>`;
+  bar.innerHTML=`<div class="cmpbar-in"><span class="cmpbar-t">${svg('scale',18)} <span class="cmpbar-lbl">Comparar</span> <b>${CMP.length}</b></span><div class="cmpbar-sp"></div><button class="btn btn-g btn-sm" onclick="clearCmp()">Limpiar</button><a class="btn btn-pri btn-sm" href="comparador.html">Ver comparación</a></div>`;
   requestAnimationFrame(()=>bar.classList.add('on'));}
 function clearCmp(){CMP=[];localStorage.setItem('larr_cmp','[]');document.querySelectorAll('[data-cmp]').forEach(b=>b.classList.remove('on'));renderCmpBar();}
 async function initCompare(){const d=await getData();const items=CMP.map(id=>d.products.find(p=>p.id===id)).filter(Boolean);const root=el('#cmpRoot');

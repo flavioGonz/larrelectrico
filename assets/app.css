@@ -364,7 +364,28 @@ textarea.co-inp{resize:vertical;min-height:52px}
 .co-go{flex:0 0 300px;max-width:300px;justify-content:center}
 .co-msg{flex-basis:100%;text-align:center;font-size:13px;margin-top:4px;color:var(--mut)}
 .co-msg.err{color:#d04343}
-@media(max-width:640px){.co-fields{grid-template-columns:1fr}.co-paygrid{grid-template-columns:1fr}.co-modal{max-width:460px}.co-go{flex:1 1 100%;max-width:none}}
+@media(max-width:640px){
+.co-ov{padding:0;align-items:flex-end}
+.co-modal{max-width:100%;width:100%;max-height:96vh;border-radius:22px 22px 0 0;transform:translateY(100%)}
+.co-ov.on .co-modal{transform:none}
+.co-head{padding:20px 18px 4px}
+.co-h{font-size:20px}
+.co-body{padding:12px 18px 10px}
+.co-fields{grid-template-columns:1fr;gap:0}
+.co-row{grid-template-columns:1fr 1fr}
+.co-inp{padding:14px 14px;font-size:16px;margin-bottom:12px}
+.co-paygrid{grid-template-columns:1fr;gap:12px}
+.co-pay{min-width:0;min-height:60px;padding:14px 15px;gap:14px}
+.co-paybody{min-width:0}
+.co-payt{flex-wrap:wrap;font-size:14.5px}
+.co-payd{white-space:normal}
+.co-radio{width:24px;height:24px}
+.co-x{width:40px;height:40px;top:14px;right:14px}
+.co-detail{min-width:0}
+.co-foot{padding:16px 18px calc(18px + env(safe-area-inset-bottom));gap:14px}
+.co-tot{min-width:0;flex-basis:100%}
+.co-go{flex:1 1 100%;max-width:none;min-height:54px;font-size:15.5px}
+}
 /* ===== página resultado de pago ===== */
 .payres{text-align:center;background:#fff;border:1px solid var(--line);border-radius:24px;padding:48px 32px;box-shadow:var(--sh2,0 20px 50px -20px rgba(0,0,0,.18))}
 .payres h1{font-size:28px;font-weight:800;letter-spacing:-.03em;margin:18px 0 6px}
@@ -597,6 +618,8 @@ textarea.co-inp{resize:vertical;min-height:52px}
 .cmpbar-t{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500}
 .cmpbar-t b{background:var(--blue);padding:1px 9px;border-radius:999px;font-size:12px}
 .cmpbar .btn-g{background:rgba(255,255,255,.12);border-color:transparent;color:#fff}
+.cmpbar-sp{flex:1;min-width:0}
+@media(max-width:560px){.cmpbar{padding:0 10px 10px}.cmpbar-in{gap:8px;padding:10px 12px;max-width:100%}.cmpbar-lbl{display:none}.cmpbar-t{font-size:13px;gap:5px;flex:0 0 auto}.cmpbar-t b{padding:1px 7px}.cmpbar .btn-sm{padding:8px 11px;font-size:12.5px;white-space:nowrap}.cmpbar-sp{flex:1 1 auto}}
 .cmp-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px}
 .cmptable{width:100%;border-collapse:collapse;min-width:600px;background:#fff}
 .cmptable td{padding:13px 16px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:14px;vertical-align:middle;text-align:center}
