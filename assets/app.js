@@ -21,7 +21,11 @@ const IC={
  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/>',
  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
  menu:'<path d="M3 6h18M3 12h18M3 18h18"/>',
- arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>'
+ arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+ file:'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/>',
+ play:'<path d="M8 5v14l11-7z"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+ doc:'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>'
 };
 const svg=(n,w=20)=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="${w}" height="${w}">${IC[n]||IC.pkg}</svg>`;
 const catIcon=name=>{const n=(name||'').toUpperCase();
@@ -278,38 +282,48 @@ async function initProduct(){
     : p.stock>0?`<div class="pp-stock low"><span class="d"></span>¡${T.last}! Quedan ${p.stock}</div>`
     : `<div class="pp-stock no"><span class="d"></span>${T.nostock} · consultá disponibilidad</div>`;
   const sold = p.sales>20?`<span class="pp-sold">${svg('fire',15)} ${p.sales} ${T.sold}</span>`:'';
+  const docsHtml=(p.docs&&p.docs.length)?`<div class="pp-docs">${p.docs.map(dc=>`<a class="pp-doc" href="${imgu(dc.url)}" target="_blank" rel="noopener"><span class="di">${svg('file',19)}</span><span class="dn">${dc.name||'Documento'}</span><span class="dl">${svg('arrow',16)}</span></a>`).join('')}</div>`:'';
+  const specsHtml=specs.length?`<table class="spectable">${specs.map((s,i)=>`<tr class="${i%2?'alt':''}"><td class="k"><span class="sdot"></span>${s[0]}</td><td class="v">${s[1]}</td></tr>`).join('')}</table>`:'';
+  const descHtml=(p.desc||p.s_desc)?`<div class="pp-desc">${p.desc||p.s_desc}</div>`:'<div class="pp-desc" style="color:var(--mut2)">Este producto no tiene descripción adicional. Consultanos por WhatsApp para más información.</div>';
+  const _tabs=[];
+  if(specsHtml)_tabs.push(['specs','chip','Especificaciones',specsHtml]);
+  _tabs.push(['desc','info','Descripción',descHtml]);
+  if(videoHtml)_tabs.push(['video','play','Unboxing',videoHtml]);
+  if(docsHtml)_tabs.push(['docs','file','Documentos',docsHtml]);
+  const tabsHtml=`<div class="pp-tabs"><div class="pt-nav">${_tabs.map((t,i)=>`<button class="${i===0?'on':''}" data-p="${t[0]}">${svg(t[1],17)}<span>${t[2]}</span></button>`).join('')}</div><div class="pt-body">${_tabs.map((t,i)=>`<div class="pt-pane${i===0?' on':''}" data-pane="${t[0]}">${t[3]}</div>`).join('')}</div></div>`;
   root.innerHTML=`<div class="pp">
-    <div class="pp-gal"><div class="main">${main}<button class="wl big ${inWL(p.id)?'on':''}" id="ppWl" title="Agregar a favoritos">${svg('heart',20)}</button></div>${thumbs}</div>
+    <div class="pp-gal"><div class="main">${vlogo?`<img class="pp-vlogo" src="${vlogo}" onerror="this.remove()">`:''}${main}<button class="wl big ${inWL(p.id)?'on':''}" id="ppWl" title="Agregar a favoritos">${svg('heart',20)}</button></div>${thumbs}</div>
     <div class="pp-info">
       <div class="crumb"><a href="index.html">Inicio</a> / <a href="catalogo.html">Catálogo</a> / <span>${p.name}</span></div>
-      <div class="br-row">${vlogo?`<img class="vlogo" src="${vlogo}" onerror="this.style.display='none'">`:''}<span class="br">${p.brand||'Larr Eléctrico'}</span></div><h1>${p.name}</h1>
+      <div class="br-row"><span class="br">${p.brand||'Larr Eléctrico'}</span></div><h1>${p.name}</h1>
       <div class="sku-row">${p.sku?'<span class="sku">Código: '+p.sku+'</span>':''}${sold}</div>
       <div class="pp-price">${p.price?money(p.price)+' <span class="ivatag">+ IVA</span>':'<span class=noprice>Consultar precio</span>'}</div>
       ${p.price?`<div class="pp-iva">Precio final con IVA (22%): <b>${money(withIva(p.price))}</b></div>`:''}
       ${stockBig}
       <div class="pp-buy"><div class="stepper"><button id="qm">${svg('minus',17)}</button><span id="qv">1</span><button id="qp">${svg('plus',17)}</button></div>
       <button class="btn btn-pri btn-lg" id="ppAdd" style="flex:1">${svg('cart',18)} Agregar al carrito</button></div>
-      <a class="btn btn-wa btn-block" id="ppWa">${svg('wa',18)} Consultar por WhatsApp</a>
+      <div class="pp-consult">
+        <a class="btn btn-wa" id="ppWa">${svg('wa',18)} Por WhatsApp</a>
+        <a class="btn btn-g" href="mailto:ventas@larrelectrico.uy?subject=${encodeURIComponent('Consulta: '+p.name)}&body=${encodeURIComponent('Hola, quiero consultar por el producto '+p.name+(p.sku?' (código '+p.sku+')':'')+'. ')}">${svg('mail',18)} Por correo</a>
+      </div>
       <div class="pp-feat"><div class="f">${svg('truck',18)} Envío a todo el país</div><div class="f">${svg('shield',18)} Productos garantizados</div><div class="f">${svg('bolt',18)} Stock real actualizado</div><div class="f">${svg('check',18)} Asesoría técnica</div></div>
       ${cats?`<div class="chipcat">${cats}</div>`:''}
-      ${specs.length?`<div class="pp-specs"><h3>${svg('chip',18)} Especificaciones técnicas</h3><table class="spectable">${specs.map((s,i)=>`<tr class="${i%2?'alt':''}"><td class="k"><span class="sdot"></span>${s[0]}</td><td class="v">${s[1]}</td></tr>`).join('')}</table></div>`:''}
-      ${(p.desc||p.s_desc)?`<div class="pp-specs"><h3 style="margin-top:22px">Descripción</h3><div class="pp-desc">${p.desc||p.s_desc}</div></div>`:''}
-      ${videoHtml?`<div class="pp-specs"><h3 style="margin-top:22px">${svg('fire',18)} Unboxing / Video</h3>${videoHtml}</div>`:''}
-      ${(p.docs&&p.docs.length)?`<div class="pp-specs"><h3 style="margin-top:22px">${svg('shield',18)} Documentos y fichas técnicas</h3><div class="pp-docs">${p.docs.map(dc=>`<a class="pp-doc" href="${imgu(dc.url)}" target="_blank" rel="noopener"><span class="di"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/></svg></span><span class="dn">${dc.name||'Documento'}</span><span class="dl"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m-4.5-4.5L12 14l4.5-4.5M4 20h16"/></svg></span></a>`).join('')}</div></div>`:''}
     </div></div>
-    <section class="sec" style="padding:40px 0 0"><h2 style="font-size:22px;font-weight:700">Productos relacionados</h2><div class="pgrid" id="rel" style="margin-top:20px"></div></section>`;
+    ${tabsHtml}
+    <section class="sec" style="padding:44px 0 0"><h2 style="font-size:22px;font-weight:700">Productos relacionados</h2><div class="pgrid" id="rel" style="margin-top:20px"></div></section>`;
   let q=1;el('#qm').onclick=()=>{q=Math.max(1,q-1);el('#qv').textContent=q;};el('#qp').onclick=()=>{q++;el('#qv').textContent=q;};
   el('#ppAdd').onclick=()=>{addCart(p,q);openCart();};
   el('#ppWl').onclick=()=>toggleWL(p.id,el('#ppWl'));
   el('#ppWa').onclick=()=>{window.open(`https://wa.me/${WA}?text=${encodeURIComponent('Hola! Consulto por: '+p.name+(p.sku?' ('+p.sku+')':''))}`,'_blank');};
   els('.thumbs button').forEach(b=>b.onclick=()=>{el('#ppMain').src=b.dataset.t;els('.thumbs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+  els('.pt-nav button').forEach(b=>b.onclick=()=>{els('.pt-nav button').forEach(x=>x.classList.toggle('on',x===b));els('.pt-pane').forEach(pp=>pp.classList.toggle('on',pp.dataset.pane===b.dataset.p));});
   const rel=d.products.filter(x=>x.id!==p.id&&(x.categories||[]).some(c=>(p.categories||[]).includes(c))).slice(0,4);
   const relbox=el('#rel');relbox.innerHTML=(rel.length?rel:d.products.filter(x=>x.id!==p.id).slice(0,4)).map(pcard).join('');wireCards(relbox);
 }
 /* AUTH */
 async function initAuth(){
   const r=await fetch(API+'auth.php?action=me').then(r=>r.json()).catch(()=>({}));
-  if(r.user){ renderAccount(r.user); return; }
+  if(r.user){ window.LARR_USER=r.user; renderAccountLanding(r.user); return; }
   const tab=w=>{els('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===w));el('#formLogin').style.display=w==='login'?'block':'none';el('#formReg').style.display=w==='reg'?'block':'none';};
   els('.tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
   el('#formLogin').onsubmit=async ev=>{ev.preventDefault();const m=el('#authMsg');m.className='msg';
@@ -398,6 +412,77 @@ async function loadAccOrders(){
     ${o.payment?`<div class="ord-pay">${svg('cart',13)} ${PAYLBL[o.payment]||o.payment}</div>`:''}
   </div>`).join('');
 }
+/* ===== ACCOUNT DRAWER ===== */
+function orderCardHtml(o){
+  return `<div class="ord">
+    <div class="ord-h"><div class="ord-hl"><b>Pedido #${o.id}</b><span class="ord-date">${(o.created||'').slice(0,16).replace('T',' ')}</span></div><div class="ord-tot">${money(o.total)}</div></div>
+    ${ordStepper(o.status)}
+    <div class="ord-items">${o.items.map(it=>`<span class="ord-it">${it.qty}× ${esc2(it.name)}</span>`).join('')}</div>
+    ${o.payment?`<div class="ord-pay">${svg('cart',13)} ${PAYLBL[o.payment]||o.payment}</div>`:''}</div>`;
+}
+function acctOverlay(){ let ov=el('#acctOv'); if(!ov){ov=document.createElement('div');ov.id='acctOv';ov.className='acd-ov';ov.innerHTML='<aside class="acd" id="acctDrawer"></aside>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)closeAcct();});} return ov; }
+function closeAcct(){ const ov=el('#acctOv'); if(ov)ov.classList.remove('on'); }
+async function openAcct(){
+  let u=window.LARR_USER; if(!u){ try{u=(await fetch(API+'auth.php?action=me').then(r=>r.json())).user;}catch(e){} }
+  if(!u){ location.href='cuenta.html'; return; }
+  window.LARR_USER=u;
+  const ov=acctOverlay(); requestAnimationFrame(()=>ov.classList.add('on'));
+  acctHome(u);
+}
+function acdHeader(u){ const av=u.avatar?imgu(u.avatar):null; const ini=((u.name||'?').trim()[0]||'?').toUpperCase();
+  return `<div class="acd-head"><span class="acd-av">${av?`<img src="${av}">`:`<span class="acd-ini">${ini}</span>`}</span><div class="acd-id"><b>${esc2(u.name)}</b><span>${esc2(u.email)}</span></div><button class="icbtn" id="acdClose">${svg('x',20)}</button></div>`; }
+function acctHome(u){
+  const d=el('#acctDrawer');
+  const items=[['perfil','user','Mi perfil','Nombre, contacto y foto'],['orders','cart','Mis pedidos','Seguimiento de tus compras'],['envios','truck','Datos de envío','Dirección y preferencias'],['pass','shield','Seguridad','Cambiar contraseña']];
+  d.innerHTML=acdHeader(u)+`<div class="acd-body"><div class="acd-menu">${items.map(it=>`<button class="acd-mi" data-go="${it[0]}"><span class="acd-mic">${svg(it[1],19)}</span><span class="acd-mt"><b>${it[2]}</b><span>${it[3]}</span></span><span class="acd-ch">${svg('chev',16)}</span></button>`).join('')}<button class="acd-mi logout" id="acdLogout"><span class="acd-mic out">${svg('arrow',19)}</span><span class="acd-mt"><b>Cerrar sesión</b></span></button></div></div>`;
+  el('#acdClose').onclick=closeAcct;
+  el('#acdLogout').onclick=async()=>{await fetch(API+'auth.php?action=logout');window.LARR_USER=null;location.href='index.html';};
+  d.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>acctView(b.dataset.go,window.LARR_USER||u));
+}
+function acctView(key,u){
+  const d=el('#acctDrawer');
+  const titles={perfil:'Mi perfil',envios:'Datos de envío',pass:'Seguridad',orders:'Mis pedidos'};
+  let body='';
+  if(key==='perfil'){ const av=u.avatar?imgu(u.avatar):null; const ini=((u.name||'?').trim()[0]||'?').toUpperCase();
+    body=`<label class="acd-avbox" id="avBox2">${av?`<img id="avImg2" src="${av}">`:`<span class="acd-ini big" id="avImg2">${ini}</span>`}<span class="acd-cam">${svg('plus',14)}</span><input type="file" id="avFile2" accept="image/*" hidden></label>
+      <div class="acd-f"><label>Nombre y apellido</label><input class="inp2" id="pf2Name" value="${esc2(u.name)}"></div>
+      <div class="acd-f"><label>Email</label><input class="inp2" id="pf2Email" type="email" value="${esc2(u.email)}"></div>
+      <div class="acd-f"><label>Teléfono</label><input class="inp2" id="pf2Phone" value="${esc2(u.phone||'')}" placeholder="Ej. 099 123 456"></div>
+      <button class="btn btn-pri btn-block" id="pf2Save">${svg('check',16)} Guardar cambios</button><div class="acd-msg" id="pf2Msg"></div>`;
+  } else if(key==='envios'){
+    body=`<div class="acd-f"><label>Dirección</label><input class="inp2" id="sh2Addr" value="${esc2(u.address||'')}" placeholder="Calle, número, apto"></div>
+      <div class="acd-f"><label>Ciudad / Localidad</label><input class="inp2" id="sh2City" value="${esc2(u.city||'')}"></div>
+      <div class="acd-f"><label>Notas para la entrega</label><textarea class="inp2" id="sh2Notes" rows="2" placeholder="Referencias, horarios, etc.">${esc2(u.ship_notes||'')}</textarea></div>
+      <button class="btn btn-pri btn-block" id="sh2Save">${svg('check',16)} Guardar datos de envío</button><div class="acd-msg" id="sh2Msg"></div>
+      <p class="acd-note">${svg('truck',14)} Despachamos a todo el país. Guardamos estos datos para agilizar tu próximo pedido; el envío se coordina por WhatsApp.</p>`;
+  } else if(key==='pass'){
+    body=`<div class="acd-f"><label>Contraseña actual</label><input class="inp2" id="pw2Cur" type="password" autocomplete="current-password"></div>
+      <div class="acd-f"><label>Nueva contraseña</label><input class="inp2" id="pw2New" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></div>
+      <div class="acd-f"><label>Repetir nueva contraseña</label><input class="inp2" id="pw2New2" type="password" autocomplete="new-password"></div>
+      <button class="btn btn-pri btn-block" id="pw2Save">${svg('shield',16)} Cambiar contraseña</button><div class="acd-msg" id="pw2Msg"></div>`;
+  } else if(key==='orders'){ body=`<div id="acdOrders"><div class="acd-load">Cargando tus pedidos…</div></div>`; }
+  d.innerHTML=acdHeader(u)+`<div class="acd-body"><div class="acd-sec-h"><button class="acd-back" id="acdBack">${svg('chev',18)}</button><h3>${titles[key]}</h3></div><div class="acd-sec-b">${body}</div></div>`;
+  el('#acdClose').onclick=closeAcct;
+  el('#acdBack').onclick=()=>acctHome(window.LARR_USER||u);
+  if(key==='perfil'){
+    el('#avBox2').onclick=e=>{if(e.target.tagName!=='INPUT')el('#avFile2').click();};
+    el('#avFile2').onchange=async()=>{const f=el('#avFile2').files[0];if(!f)return;const fd=new FormData();fd.append('file',f);const r=await fetch(API+'avatar.php',{method:'POST',body:fd}).then(r=>r.json()).catch(()=>({error:'Error de red'}));if(r.ok){const url=imgu(r.avatar);let img=el('#avImg2');if(img&&img.tagName==='IMG')img.src=url;else if(img)img.outerHTML='<img id="avImg2" src="'+url+'">';if(window.LARR_USER)window.LARR_USER.avatar=r.avatar;const nv=el('#navUserImg');if(nv)nv.src=url;toast('Foto actualizada');}else alert(r.error||'No se pudo subir la foto.');};
+    el('#pf2Save').onclick=async()=>{const b=el('#pf2Msg');b.className='acd-msg';const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',name:el('#pf2Name').value,email:el('#pf2Email').value,phone:el('#pf2Phone').value})}).then(r=>r.json()).catch(()=>({error:'Error de red'}));if(res.error){b.className='acd-msg err';b.textContent=res.error;}else{window.LARR_USER=res.user;b.className='acd-msg ok';b.textContent='✓ Datos guardados';toast('Perfil actualizado');}};
+  }
+  if(key==='envios'){
+    el('#sh2Save').onclick=async()=>{const b=el('#sh2Msg');b.className='acd-msg';const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'shipping',address:el('#sh2Addr').value,city:el('#sh2City').value,ship_notes:el('#sh2Notes').value})}).then(r=>r.json()).catch(()=>({error:'Error de red'}));if(res.error){b.className='acd-msg err';b.textContent=res.error;}else{window.LARR_USER=res.user;b.className='acd-msg ok';b.textContent='✓ Datos de envío guardados';toast('Datos de envío guardados');}};
+  }
+  if(key==='pass'){
+    el('#pw2Save').onclick=async()=>{const b=el('#pw2Msg');b.className='acd-msg';if(el('#pw2New').value!==el('#pw2New2').value){b.className='acd-msg err';b.textContent='Las contraseñas nuevas no coinciden.';return;}const res=await fetch(API+'auth.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'password',current:el('#pw2Cur').value,new:el('#pw2New').value})}).then(r=>r.json()).catch(()=>({error:'Error de red'}));if(res.error){b.className='acd-msg err';b.textContent=res.error;}else{b.className='acd-msg ok';b.textContent='✓ Contraseña actualizada';el('#pw2Cur').value=el('#pw2New').value=el('#pw2New2').value='';toast('Contraseña cambiada');}};
+  }
+  if(key==='orders'){ (async()=>{const box=el('#acdOrders');const r=await fetch(API+'auth.php?action=orders').then(r=>r.json()).catch(()=>({}));const os=r.orders||[];box.innerHTML=os.length?os.map(orderCardHtml).join(''):'<div class="acd-empty">'+svg('cart',40)+'<p>Todavía no hiciste pedidos.</p><a class="btn btn-pri btn-block" href="catalogo.html">Ir al catálogo</a></div>';})(); }
+}
+function renderAccountLanding(u){
+  const wrap=document.querySelector('.authwrap'); if(wrap){wrap.classList.add('acct');
+    wrap.innerHTML=`<div class="acc-land"><div class="acc-land-av">${u.avatar?`<img src="${imgu(u.avatar)}">`:`<span>${((u.name||'?').trim()[0]||'?').toUpperCase()}</span>`}</div><h1>Hola, ${esc2((u.name||'').split(' ')[0])}</h1><p>Gestioná tu perfil, pedidos, datos de envío y seguridad.</p><button class="btn btn-pri btn-lg" id="openAcctBtn">${svg('user',18)} Abrir mi cuenta</button></div>`;
+    el('#openAcctBtn').onclick=()=>openAcct();}
+  openAcct();
+}
 async function initFav(){const d=await getData();const box=el('#favGrid');const items=d.products.filter(p=>WL.includes(p.id));
   if(!items.length){box.innerHTML='';el('#favEmpty').innerHTML='<div class="cempty" style="padding:70px 20px">'+svg('heart',46)+'<div style="margin:12px 0 4px">Todavía no tienes favoritos.</div><a class="btn btn-pri" style="margin-top:14px" href="catalogo.html">Ir al catálogo</a></div>';return;}
   el('#favEmpty').innerHTML='';box.innerHTML=items.map(pcard).join('');wireCards(box);}
@@ -410,7 +495,11 @@ async function initHeader(){
   initLiveSearch(d);
   try{const me=await fetch(API+'auth.php?action=me').then(r=>r.json());
     window.LARR_USER=(me&&me.user)?me.user:null;
-    const nu=el('#navUser');if(window.LARR_USER&&window.LARR_USER.avatar&&nu){nu.classList.add('hasav');nu.innerHTML='<img id="navUserImg" src="'+imgu(window.LARR_USER.avatar)+'">';}
+    const nu=el('#navUser');
+    if(window.LARR_USER&&nu){
+      if(window.LARR_USER.avatar){nu.classList.add('hasav');nu.innerHTML='<img id="navUserImg" src="'+imgu(window.LARR_USER.avatar)+'">';}
+      nu.onclick=e=>{e.preventDefault();e.stopPropagation();openAcct();};
+    }
     if(window.LARR_USER&&CART.length)syncCart();
   }catch(e){}
 }

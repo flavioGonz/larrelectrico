@@ -1,11 +1,15 @@
 <?php
 require(__DIR__.'/../inc/init.php');
+require_once(__DIR__.'/../inc/mailer.php');
 header('Content-Type: application/json; charset=utf-8');
 $in=json_decode(file_get_contents('php://input'),true)?:[];
 $act=$_GET['action'] ?? ($in['action'] ?? '');
 function out($d){ echo json_encode($d,JSON_UNESCAPED_UNICODE); exit; }
-function ensure_cols($pdo){ try{ $have=[]; foreach($pdo->query("SELECT column_name FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users'") as $r){ $have[strtolower($r['column_name']??$r['COLUMN_NAME']??'')]=1; } if(!isset($have['avatar'])) $pdo->exec("ALTER TABLE users ADD COLUMN avatar VARCHAR(400) DEFAULT NULL"); }catch(Exception $e){} }
-function sess_user($u){ return ['id'=>(int)$u['id'],'name'=>$u['name'],'email'=>$u['email'],'phone'=>$u['phone'],'avatar'=>$u['avatar']??null]; }
+function ensure_cols($pdo){ try{ $have=[]; foreach($pdo->query("SELECT column_name FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users'") as $r){ $have[strtolower($r['column_name']??$r['COLUMN_NAME']??'')]=1; }
+  $cols=['avatar'=>"VARCHAR(400)",'address'=>"VARCHAR(300)",'city'=>"VARCHAR(120)",'ship_notes'=>"VARCHAR(400)"];
+  foreach($cols as $c=>$t){ if(!isset($have[$c])) $pdo->exec("ALTER TABLE users ADD COLUMN $c $t DEFAULT NULL"); }
+}catch(Exception $e){} }
+function sess_user($u){ return ['id'=>(int)$u['id'],'name'=>$u['name'],'email'=>$u['email'],'phone'=>$u['phone'],'avatar'=>$u['avatar']??null,'address'=>$u['address']??null,'city'=>$u['city']??null,'ship_notes'=>$u['ship_notes']??null]; }
 try{
  $pdo=db(); ensure_cols($pdo);
  if($act==='me'){ $u=user(); if($u){ $s=$pdo->prepare("SELECT * FROM users WHERE id=?"); $s->execute([$u['id']]); $db=$s->fetch(); if($db){ $_SESSION['user']=sess_user($db); $u=$_SESSION['user']; } } out(['user'=>$u]); }
@@ -20,6 +24,13 @@ try{
    $s=$pdo->prepare("SELECT * FROM users WHERE id=?"); $s->execute([$u['id']]); $_SESSION['user']=sess_user($s->fetch());
    out(['ok'=>true,'user'=>$_SESSION['user']]);
  }
+ if($act==='shipping'){
+   $u=user(); if(!$u) out(['error'=>'No has iniciado sesión.']);
+   $address=trim($in['address']??''); $city=trim($in['city']??''); $notes=trim($in['ship_notes']??'');
+   $pdo->prepare("UPDATE users SET address=?,city=?,ship_notes=? WHERE id=?")->execute([$address,$city,$notes,$u['id']]);
+   $s=$pdo->prepare("SELECT * FROM users WHERE id=?"); $s->execute([$u['id']]); $_SESSION['user']=sess_user($s->fetch());
+   out(['ok'=>true,'user'=>$_SESSION['user']]);
+ }
  if($act==='password'){
    $u=user(); if(!$u) out(['error'=>'No has iniciado sesión.']);
    $cur=$in['current']??''; $new=$in['new']??'';
@@ -27,6 +38,7 @@ try{
    $s=$pdo->prepare("SELECT pass_hash FROM users WHERE id=?"); $s->execute([$u['id']]); $row=$s->fetch();
    if(!$row||!password_verify($cur,$row['pass_hash'])) out(['error'=>'La contraseña actual no es correcta.']);
    $pdo->prepare("UPDATE users SET pass_hash=? WHERE id=?")->execute([password_hash($new,PASSWORD_DEFAULT),$u['id']]);
+   @mail_send($u['email'],'Tu contraseña fue cambiada',mail_password_changed($u['name']));
    out(['ok'=>true]);
  }
  if($act==='orders'){
@@ -46,6 +58,7 @@ try{
    $pdo->prepare("INSERT INTO users(name,email,phone,pass_hash,created) VALUES(?,?,?,?,NOW())")->execute([$name,$email,$phone,$h]);
    $id=$pdo->lastInsertId();
    $_SESSION['user']=['id'=>(int)$id,'name'=>$name,'email'=>$email,'phone'=>$phone];
+   @mail_send($email,'¡Bienvenido a Larr Eléctrico!',mail_welcome($name));
    out(['ok'=>true,'user'=>$_SESSION['user']]);
  }
  if($act==='login'){

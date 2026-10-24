@@ -2,6 +2,7 @@
 // Recordatorio de carrito abandonado. Ejecutado por cron cada hora.
 // Uso: /final/api/cart_cron.php?key=CRON_KEY   (&test=email@dominio para probar a una casilla)
 require(__DIR__.'/../inc/init.php');
+require_once(__DIR__.'/../inc/mailer.php');
 header('Content-Type: application/json; charset=utf-8');
 global $CFG;
 if(($_GET['key']??'')!==($CFG['cron_key']??'x')){ http_response_code(403); echo json_encode(['error'=>'forbidden']); exit; }
@@ -53,8 +54,7 @@ try{
     if($conv->fetch()){ $pdo->prepare("UPDATE carts SET reminded=1 WHERE id=?")->execute([$c['id']]); $skipped++; continue; }
     $to=$testTo?:$c['email'];
     $link=$site.'/index.html?recover='.$c['id'].'&t='.$c['token'];
-    $html=cart_email($c['name'],$items,$c['total'],$link,$site,$money);
-    if(send_mail($to,'Te quedó el carrito en Larr Eléctrico',$html,$from,$fromName)){ $sent++; if(!$testTo)$pdo->prepare("UPDATE carts SET reminded=1 WHERE id=?")->execute([$c['id']]); }
+    if(mail_send($to,'Te quedó el carrito en Larr Eléctrico',mail_cart($c['name'],$items,$c['total'],$link))){ $sent++; if(!$testTo)$pdo->prepare("UPDATE carts SET reminded=1 WHERE id=?")->execute([$c['id']]); }
     if($testTo) break; // en modo prueba, un solo envío
   }
   echo json_encode(['ok'=>true,'candidates'=>count($rows),'sent'=>$sent,'skipped_converted'=>$skipped,'test'=>$testTo?:null]);

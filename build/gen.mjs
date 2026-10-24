@@ -135,16 +135,16 @@ const home=head('Larr Eléctrico — Materiales eléctricos en Uruguay','Catálo
 <div class="hcard hc3"><div class="im">${heroImgs[2]?`<img src="${heroImgs[2]}">`:''}</div></div>
 </div></div></header>
 <div class="benefits"><div class="wrap"><div class="ben-grid">
-<div class="ben"><div class="bi">${svg('truck',22)}</div><div><h4>Envío a todo el país</h4><p>Despacho rápido y seguro</p></div></div>
-<div class="ben"><div class="bi">${svg('bolt',22)}</div><div><h4>Stock real</h4><p>Inventario actualizado</p></div></div>
-<div class="ben"><div class="bi">${svg('shield',22)}</div><div><h4>Marcas garantizadas</h4><p>Calidad certificada</p></div></div>
-<div class="ben"><div class="bi">${svg('headset',22)}</div><div><h4>Asesoría técnica</h4><p>Te ayudamos a elegir</p></div></div>
+<a class="ben" href="#envio"><div class="bi">${svg('truck',22)}</div><div><h4>Envío a todo el país</h4><p>Despacho rápido y seguro</p></div></a>
+<a class="ben" href="#stock"><div class="bi">${svg('bolt',22)}</div><div><h4>Stock real</h4><p>Inventario actualizado</p></div></a>
+<a class="ben" href="#marcas"><div class="bi">${svg('shield',22)}</div><div><h4>Marcas garantizadas</h4><p>Calidad certificada</p></div></a>
+<a class="ben" href="#asesoria"><div class="bi">${svg('headset',22)}</div><div><h4>Asesoría técnica</h4><p>Te ayudamos a elegir</p></div></a>
 </div></div></div>`;
 
 const homeFull=home+`
 <section class="sec"><div class="wrap">
 <div class="sec-head ctr reveal"><span class="eyebrow">Explorá por rubro</span><h2>Categorías principales</h2><p>Encontrá lo que necesitás, organizado como en el mostrador.</p></div>
-<div class="cat-grid">${topCats.map(c=>`<a class="catc reveal" href="catalogo.html?cat=${encodeURIComponent(c.name)}">${catImg[c.id]?`<div class="catbg" style="background-image:url('${catImg[c.id]}')"></div>`:''}<div class="ci">${svg(catIcon(c.name),24)}</div><div class="go">${svg('arrow',18)}</div><h3>${esc(c.name)}</h3><div class="n">${c.n} producto${c.n!==1?'s':''}</div></a>`).join('')}</div>
+<div class="cat-grid">${topCats.map(c=>`<a class="catc reveal" href="catalogo.html?cat=${encodeURIComponent(c.name)}">${catImg[c.id]?`<div class="catbg" style="background-image:url('${catImg[c.id]}')"></div>`:''}<div class="go">${svg('arrow',18)}</div><div class="cat-tx"><h3>${esc(c.name)}</h3><div class="n">${c.n} producto${c.n!==1?'s':''}</div></div></a>`).join('')}</div>
 <div style="text-align:center;margin-top:30px"><a class="btn btn-sec" href="catalogo.html">Ver todas las categorías</a></div>
 </div></section>
 <div class="marq-wrap"><div class="marq">${brands.concat(brands).map(b=>`<span>${b}</span>`).join('')}</div></div>
@@ -156,6 +156,14 @@ const homeFull=home+`
 <div class="rowbetween reveal" style="margin-bottom:28px"><div><span class="eyebrow" style="color:#ff8a00">Los que más salen</span><h2 style="font-size:clamp(25px,3.4vw,38px);font-weight:700;letter-spacing:-.03em;margin-top:6px">Más vendidos</h2></div><a class="link-arrow" href="catalogo.html">Ver todo ${svg('arrow',17)}</a></div>
 <div class="pgrid" id="bestGrid">${bestSellers.map(pcardH).join('')}</div>
 </div></section>
+<section class="sec" id="servicios"><div class="wrap">
+<div class="sec-head ctr reveal"><span class="eyebrow">Cómo trabajamos</span><h2>Más que una tienda de materiales</h2><p>Te acompañamos en cada compra: del asesoramiento a la entrega.</p></div>
+<div class="svc-grid">
+<div class="svc reveal" id="envio"><div class="svc-ic">${svg('truck',26)}</div><h3>Envío a todo el país</h3><p>Despachamos a todo Uruguay por agencia o encomienda. Coordinás el envío por WhatsApp y te pasamos el costo y el tiempo estimado según tu localidad. En Montevideo y Ciudad de la Costa coordinamos entrega o retiro, muchas veces en el día.</p><a class="svc-wa" href="https://wa.me/59894726950?text=${encodeURIComponent('Hola! Quiero consultar por un envío.')}">${svg('wa',16)} Consultar envío</a></div>
+<div class="svc reveal" id="marcas"><div class="svc-ic">${svg('shield',26)}</div><h3>Marcas garantizadas</h3><p>Trabajamos solo con marcas líderes del rubro eléctrico, con garantía oficial del fabricante. Cada producto es original y cumple las normas de seguridad vigentes: nada de réplicas ni materiales sin respaldo.</p></div>
+<div class="svc reveal" id="asesoria"><div class="svc-ic">${svg('headset',26)}</div><h3>Asesoría técnica</h3><p>Nuestro equipo tiene más de 15 años en el rubro. Te ayudamos a elegir el material correcto para tu obra o instalación, calcular cantidades y resolver dudas técnicas. Escribinos por WhatsApp y te asesoramos sin compromiso.</p><a class="svc-wa" href="https://wa.me/59894726950?text=${encodeURIComponent('Hola! Necesito asesoramiento técnico.')}">${svg('wa',16)} Pedir asesoramiento</a></div>
+<div class="svc reveal" id="stock"><div class="svc-ic">${svg('bolt',26)}</div><h3>Stock real y actualizado</h3><p>Lo que ves en la tienda es lo que tenemos. Mantenemos el inventario al día para que compres con confianza, y si algo queda bajo pedido te lo avisamos antes de confirmar.</p></div>
+</div></div></section>
 <section class="sec" id="contacto"><div class="wrap"><div class="band reveal">
 <span class="eyebrow" style="color:#8fc0ff">Clientes y empresas</span>
 <h2>¿Obra grande? Cotizamos en el día.</h2>
