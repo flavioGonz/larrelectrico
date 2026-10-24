@@ -65,6 +65,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 label{font-size:13px;font-weight:500;color:var(--mut);display:block;margin-bottom:6px}
 .field{margin-bottom:15px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.detail-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
 .toolbar{display:flex;gap:10px;margin-bottom:16px;align-items:center}
 .srch{flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 13px}
 .srch input{border:none;outline:none;width:100%;font-size:14px}.srch svg{width:17px;height:17px;color:var(--mut2)}
@@ -130,9 +131,30 @@ body.leaving .wrapc{opacity:0;transform:translateY(-4px);transition:opacity .08s
  .pwa-install{display:inline-flex}
  /* adaptar cada sección a móvil */
  .grid2{grid-template-columns:1fr}
+ .detail-grid{grid-template-columns:1fr!important;gap:14px}
  .wrapc{overflow-x:hidden}
  .panel{overflow:visible}
- .panel table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+ .panel .ph{padding:14px 16px}
+ /* tablas -> lista apilada dentro del panel (el panel es la tarjeta) */
+ .panel table,.panel tbody,.panel tr,.panel td{display:block;width:auto}
+ .panel thead{display:none}
+ .panel tbody{padding:2px 0}
+ .panel tr{border-bottom:1px solid var(--line);padding:9px 16px}
+ .panel tr:last-child{border-bottom:none}
+ .panel tr:hover td,tr:hover td{background:transparent}
+ .panel td{border:none!important;padding:5px 0;display:flex;align-items:center;justify-content:space-between;gap:14px;text-align:right;font-size:14px;white-space:normal;min-height:0}
+ .panel td::before{content:attr(data-label);font-weight:600;color:var(--mut2);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;text-align:left;flex:0 0 auto;max-width:45%}
+ .panel td:not([data-label])::before{display:none}
+ .panel td .inp,.panel td input,.panel td select{width:auto;max-width:62%}
+ .panel td .thumb{margin:0}
+ /* filas de total (ficha de pedido) */
+ .panel tr.totrow{display:flex;justify-content:space-between;align-items:baseline;border-bottom:none;padding:3px 16px}
+ .panel tr.totrow td{padding:2px 0;display:block;border:none!important}
+ .panel tr.totrow td::before{display:none}
+ .panel tr.totrow td:first-child{color:var(--mut);font-size:13px;text-align:left;max-width:none}
+ .panel tr.totrow td:last-child{font-weight:600;text-align:right}
+ .panel tr.totrow.grand{border-top:1px solid var(--line);margin-top:4px;padding-top:9px}
+ .panel tr.totrow.grand td{font-weight:800;font-size:15px}
  .toolbar{flex-wrap:wrap}
  .toolbar .btn{flex:1;justify-content:center}
  .toolbar .srch{flex-basis:100%;order:-1}
@@ -204,6 +226,15 @@ function af(){ echo '</div></div></div>
  if(btn)btn.addEventListener("click",function(){ if(!deferred)return; deferred.prompt(); deferred.userChoice.finally(function(){ deferred=null; btn.style.display="none"; }); });
  window.addEventListener("appinstalled",function(){ if(btn)btn.style.display="none"; });
 })();
+/* ===== tablas -> tarjetas: etiqueta cada celda con su columna (móvil) ===== */
+(function(){ try{
+ var tbs=document.querySelectorAll(".wrapc table");
+ for(var i=0;i<tbs.length;i++){ var t=tbs[i]; var hs=t.querySelectorAll("thead th"); if(!hs.length)continue;
+  var lb=[]; for(var j=0;j<hs.length;j++)lb.push(hs[j].textContent.trim());
+  var rows=t.querySelectorAll("tbody tr");
+  for(var r=0;r<rows.length;r++){ var cs=rows[r].children; for(var c=0;c<cs.length;c++){ if(lb[c] && !cs[c].hasAttribute("data-label")) cs[c].setAttribute("data-label",lb[c]); } }
+ }
+}catch(e){} })();
 </script>';
 pwa_gate(); sw_reg();
 echo '</body></html>'; }

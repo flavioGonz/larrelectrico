@@ -17,7 +17,7 @@ if($edit){ $u=$pdo->query("SELECT * FROM users WHERE id=$edit AND role<>'admin'"
   ah('Editar cliente');
   ?>
   <a href="customers.php" class="btn btn-g btn-sm" style="margin-bottom:16px"><?=ico('chev',15)?>Volver a clientes</a>
-  <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start">
+  <div class="detail-grid">
   <form method="post" class="panel"><div class="ph"><h2>Datos del cliente</h2></div><div style="padding:18px 20px">
    <input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="id" value="<?=$edit?>"><input type="hidden" name="act" value="save">
    <div class="field"><label><?=ico('users',15)?>&nbsp;Nombre</label><input class="inp" name="name" value="<?=e($u['name'])?>" required></div>

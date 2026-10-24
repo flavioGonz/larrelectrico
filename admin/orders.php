@@ -38,16 +38,16 @@ if($view){ $o=$pdo->query("SELECT * FROM orders WHERE id=$view")->fetch();
   ah('Pedido #'.$view);
   ?>
   <a href="orders.php" class="btn btn-g btn-sm" style="margin-bottom:16px"><?=ico('chev',15)?>Volver a pedidos</a>
-  <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start">
+  <div class="detail-grid">
   <div class="panel"><div class="ph"><h2>Ítems del pedido</h2></div><table><thead><tr><th>Producto</th><th>Código</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>
   <?php foreach($items as $it){ $s=($it['price']??0)*($it['qty']??1); ?>
   <tr><td style="font-weight:500"><?=e($it['name']??'')?></td><td><?=e($it['sku']??'')?></td><td><?=(int)($it['qty']??1)?></td><td><?=money($it['price']??0)?></td><td><?=money($s)?></td></tr>
   <?php } ?>
-  <tr><td colspan="4" style="text-align:right;color:var(--mut)">Subtotal (sin IVA)</td><td><?=money($sub)?></td></tr>
-  <tr><td colspan="4" style="text-align:right;color:var(--mut)">IVA (22%)</td><td><?=money($iva)?></td></tr>
-  <tr><td colspan="4" style="text-align:right;color:var(--mut)">Total con IVA</td><td><?=money($grand)?></td></tr>
-  <?php if($discAmt>0):?><tr><td colspan="4" style="text-align:right;color:var(--ok)">Descuento transferencia (10%)</td><td style="color:var(--ok)">− <?=money($discAmt)?></td></tr><?php endif;?>
-  <tr><td colspan="4" style="text-align:right;font-weight:700">Total a pagar</td><td style="font-weight:800"><?=money($pagar)?></td></tr>
+  <tr class="totrow"><td colspan="4" style="text-align:right;color:var(--mut)">Subtotal (sin IVA)</td><td><?=money($sub)?></td></tr>
+  <tr class="totrow"><td colspan="4" style="text-align:right;color:var(--mut)">IVA (22%)</td><td><?=money($iva)?></td></tr>
+  <tr class="totrow"><td colspan="4" style="text-align:right;color:var(--mut)">Total con IVA</td><td><?=money($grand)?></td></tr>
+  <?php if($discAmt>0):?><tr class="totrow"><td colspan="4" style="text-align:right;color:var(--ok)">Descuento transferencia (10%)</td><td style="color:var(--ok)">− <?=money($discAmt)?></td></tr><?php endif;?>
+  <tr class="totrow grand"><td colspan="4" style="text-align:right;font-weight:700">Total a pagar</td><td style="font-weight:800"><?=money($pagar)?></td></tr>
   </tbody></table></div>
   <div><div class="panel"><div class="ph"><h2>Cliente</h2></div><div style="padding:16px 20px;font-size:14px;line-height:1.9">
    <div><b><?=e($o['customer'])?:'—'?></b></div><div style="color:var(--mut)"><?=e($o['email'])?:'—'?></div>
