@@ -2,6 +2,11 @@
 config.php
 # One-time maintenance scripts (DB access)
 _export/
+_vmpay.php
+_*.json
+# Deploy script (contiene token de cPanel)
+build/deploy.ps1
+build/readcfg.mjs
 # Build/catalog cache
 catalog.json
 node_modules/

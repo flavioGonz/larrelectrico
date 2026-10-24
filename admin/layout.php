@@ -21,7 +21,15 @@ a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:in
 .top h1{font-size:19px;font-weight:700}
 .top .who{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--mut)}
 .top .who a{color:var(--mut);display:flex;align-items:center;gap:6px}.top .who a:hover{color:var(--ink)}
-.wrapc{padding:26px;max-width:1200px;width:100%}
+.wrapc{padding:28px 32px;max-width:1340px;width:100%;margin:0 auto}
+.main{align-items:stretch}
+.tip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--line);color:var(--mut2);font-size:11px;font-weight:700;cursor:help;position:relative;margin-left:6px;vertical-align:middle}
+.tip:hover{background:var(--blue);color:#fff}
+.tip .tipbox{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:var(--navy);color:#fff;font-size:12px;font-weight:400;line-height:1.4;padding:9px 12px;border-radius:9px;width:210px;text-align:left;opacity:0;visibility:hidden;transition:.18s;z-index:50;box-shadow:0 10px 30px -8px rgba(0,0,0,.4);pointer-events:none}
+.tip .tipbox::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--navy)}
+.tip:hover .tipbox{opacity:1;visibility:visible;transform:translateX(-50%)}
+label{display:flex;align-items:center}
+label .lbl-ic{width:15px;height:15px;color:var(--mut2);margin-right:6px}
 .flash{background:#eafaf0;color:var(--ok);border:1px solid #bfe9cf;padding:12px 16px;border-radius:12px;margin-bottom:18px;font-size:14px}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px}
@@ -53,10 +61,32 @@ label{font-size:13px;font-weight:500;color:var(--mut);display:block;margin-botto
 .pag{display:flex;gap:6px;justify-content:center;margin-top:18px}
 .pag a{padding:7px 12px;border:1px solid var(--line);border-radius:9px;font-size:13px;background:#fff}.pag a.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 @media(max-width:820px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}}
+/* ===== transiciones de sección (igual que la portada) ===== */
+.wrapc{animation:admin-in .36s cubic-bezier(.16,1,.3,1) both}
+@keyframes admin-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+body.leaving .wrapc{opacity:0;transform:translateY(-7px);transition:opacity .14s ease,transform .14s ease}
+.side a,.panel,.kpi{transition:.18s}
+.panel{animation:admin-in .42s cubic-bezier(.16,1,.3,1) both}
+.cards .kpi{animation:admin-in .44s cubic-bezier(.16,1,.3,1) both}
+.cards .kpi:nth-child(2){animation-delay:.05s}.cards .kpi:nth-child(3){animation-delay:.1s}.cards .kpi:nth-child(4){animation-delay:.15s}
 </style></head><body><div class="app">
 <aside class="side"><div class="lg"><span class="b"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span>Larr<span style="color:#7db5ff">Admin</span></div>
 <?php foreach($nav as $x):?><a href="<?=$x[0]?>" class="<?=$cur===$x[0]?'on':''?>"><?=ico($x[1])?><?=$x[2]?></a><?php endforeach;?>
 <div class="sep"></div><a href="../index.html" target="_blank"><?=ico('eye')?>Ver tienda</a><a href="logout.php"><?=ico('out')?>Salir</a>
 </aside><div class="main"><div class="top"><h1><?=e($title)?></h1><div class="who"><span>Hola, <?=e($u['name'])?></span><a href="logout.php"><?=ico('out',16)?></a></div></div><div class="wrapc">
 <?php $f=flash(); if($f):?><div class="flash"><?=e($f)?></div><?php endif; echo ob_get_clean(); }
-function af(){ echo '</div></div></div></body></html>'; }
+function af(){ echo '</div></div></div>
+<script>
+(function(){
+ document.addEventListener("click",function(e){
+  var a=e.target.closest("a"); if(!a)return;
+  var href=a.getAttribute("href"); if(!href)return;
+  if(a.target==="_blank"||a.hasAttribute("download")||href.charAt(0)==="#"||/^(https?:|mailto:|tel:|javascript:)/.test(href))return;
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;
+  e.preventDefault(); document.body.classList.add("leaving");
+  setTimeout(function(){ location.href=href; },150);
+ });
+ window.addEventListener("pageshow",function(ev){ if(ev.persisted)document.body.classList.remove("leaving"); });
+})();
+</script>
+</body></html>'; }

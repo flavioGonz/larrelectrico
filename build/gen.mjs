@@ -94,8 +94,8 @@ const drawer=`<div class="ov" id="ov"></div>
 <div class="ctot-row"><span>Subtotal</span><span id="cartSub">$0</span></div>
 <div class="ctot-row"><span>IVA (22%)</span><span id="cartIva">$0</span></div>
 <div class="tot"><span>Total</span><span id="cartTot">$0</span></div>
-<button class="btn btn-wa btn-block" id="checkout">${svg('wa',18)} Finalizar por WhatsApp</button>
-<p class="note">Precios en pesos uruguayos, IVA 22% incluido en el total. Coordinás pago y envío por WhatsApp.</p></div></aside>`;
+<button class="btn btn-pri btn-block" id="checkout">${svg('cart',18)} Finalizar compra</button>
+<p class="note">Precios en pesos, IVA 22% incluido en el total. Elegís el medio de pago en el siguiente paso: transferencia, giros, contra entrega, retira en local o Mercado Pago.</p></div></aside>`;
 const foot=`${drawer}<script src="assets/app.js?v=${V}"></script></body></html>`;
 
 const stkH=p=>p.stock>5?`<span class="stk"><span class="d"></span>En stock</span>`:(p.stock>0?`<span class="stk low"><span class="d"></span>Últimas (${p.stock})</span>`:`<span class="stk no"><span class="d"></span>Bajo pedido</span>`);
@@ -127,7 +127,7 @@ const home=head('Larr Eléctrico — Materiales eléctricos en Uruguay','Catálo
 <div class="hero-cta"><a href="catalogo.html" class="btn btn-pri btn-lg">${svg('cart',18)} Ver catálogo</a>
 <a href="index.html#contacto" class="btn btn-ghost btn-lg">Pedir cotización</a></div>
 <div class="hero-stat"><div><b>${data.count}</b><span>Productos</span></div><div><b>${data.categories.filter(c=>c.n>0).length}</b><span>Categorías</span></div><div><b>+15</b><span>Años</span></div></div></div>
-<div class="hero-vis"><div class="halo"></div>
+<div class="hero-vis"><div class="halo"></div><div class="hero-show" id="heroShow"></div></div><div style="display:none">
 <div class="hpill" style="top:18px;left:0"><span class="dot"></span>Stock disponible</div>
 <div class="hpill" style="bottom:26px;right:4px">${svg('truck',15)} Envío 24-48h</div>
 <div class="hcard hc1"><div class="im">${heroImgs[0]?`<img src="${heroImgs[0]}">`:''}</div></div>
@@ -203,6 +203,24 @@ const comparador=head('Comparador — Larr Eléctrico','Compará productos de La
 <div class="sec-head" style="margin-bottom:22px"><h2>Comparar productos</h2><p>Mirá las especificaciones de hasta 4 productos lado a lado.</p></div>
 <div id="cmpRoot"></div></div></section>`+footer+foot;
 
+const pago=head('Pago — Larr Eléctrico','Resultado del pago de tu pedido en Larr Eléctrico.')+header+`<section class="sec" style="padding:60px 0 80px"><div class="wrap" style="max-width:620px">
+<div id="payResult" class="payres"><div class="skel" style="height:260px;aspect-ratio:auto"></div></div>
+</div></section>
+<script>
+(function(){
+ var p=new URLSearchParams(location.search), st=p.get('st')||'', o=p.get('o')||'';
+ var box=document.getElementById('payResult'); if(!box)return;
+ var M={ok:{i:'check',c:'ok',t:'¡Pago aprobado!',d:'Recibimos tu pago correctamente. Te vamos a contactar para coordinar la entrega.'},
+  pend:{i:'clock',c:'pend',t:'Pago pendiente',d:'Tu pago está siendo procesado. Apenas se acredite te avisamos.'},
+  err:{i:'x',c:'err',t:'El pago no se concretó',d:'No pudimos procesar el pago. Podés intentar de nuevo o escribirnos por WhatsApp.'}};
+ var m=M[st]||M.err;
+ if(st==='ok'){ try{localStorage.setItem('larr_cart','[]');}catch(e){} }
+ box.className='payres '+m.c;
+ box.innerHTML='<div class="pay-ic"></div><h1>'+m.t+'</h1>'+(o?'<p class="pay-o">Pedido #'+o+'</p>':'')+'<p class="pay-d">'+m.d+'</p>'+
+  '<div class="pay-cta"><a class="btn btn-pri btn-lg" href="index.html">Volver al inicio</a><a class="btn btn-ghost btn-lg" href="catalogo.html">Seguir comprando</a></div>';
+})();
+</script>`+footer+foot;
+
 const W=(f,c)=>{fs.writeFileSync(path.join(ROOT,f),c);console.log('wrote',f,c.length);};
-W('index.html',homeFull);W('catalogo.html',catalogo);W('producto.html',producto);W('cuenta.html',cuenta);W('favoritos.html',favoritos);W('comparador.html',comparador);
+W('index.html',homeFull);W('catalogo.html',catalogo);W('producto.html',producto);W('cuenta.html',cuenta);W('favoritos.html',favoritos);W('comparador.html',comparador);W('pago.html',pago);
 console.log('OK build',data.count,'productos, destacados',featFull.length);

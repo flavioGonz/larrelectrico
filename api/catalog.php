@@ -13,8 +13,11 @@ try{
   $imgsAll=[]; foreach($pdo->query("SELECT product_id,url FROM product_images ORDER BY ordering") as $r){ $imgsAll[$r['product_id']][]=$r['url']; }
   $specsAll=[]; foreach($pdo->query("SELECT product_id,k,v FROM product_specs ORDER BY ordering") as $r){ $specsAll[$r['product_id']][]=['k'=>$r['k'],'v'=>$r['v']]; }
   $vend=[]; foreach($pdo->query("SELECT id,name,logo,site FROM vendors") as $r){ $vend[$r['id']]=$r; }
+  $pdo->exec("CREATE TABLE IF NOT EXISTS product_docs(id INT AUTO_INCREMENT PRIMARY KEY, product_id INT, url VARCHAR(400), name VARCHAR(200), ordering INT) DEFAULT CHARSET=utf8mb4");
+  $docsAll=[]; foreach($pdo->query("SELECT product_id,url,name FROM product_docs ORDER BY ordering") as $r){ $docsAll[$r['product_id']][]=['url'=>$r['url'],'name'=>$r['name']]; }
   foreach($prods as &$p){
     $p['specs']=$specsAll[$p['id']]??[];
+    $p['docs']=$docsAll[$p['id']]??[];
     $p['vendor']=(!empty($p['vendor_id'])&&isset($vend[$p['vendor_id']]))?$vend[$p['vendor_id']]:null;
     $ids=$map[$p['id']]??[];
     $p['catids']=array_values(array_unique($ids));
@@ -23,5 +26,6 @@ try{
     $p['price']=$p['price']!==null?(float)$p['price']:null;
     $p['stock']=(int)$p['stock']; $p['id']=(int)$p['id']; $p['featured']=(int)$p['featured']; $p['sales']=(int)$p['sales'];
   }
-  echo json_encode(['site'=>'larrelectrico.uy','generated'=>date('c'),'categories'=>$cats,'count'=>count($prods),'products'=>$prods], JSON_UNESCAPED_SLASHES|JSON_INVALID_UTF8_SUBSTITUTE);
+  $vendors=$pdo->query("SELECT id,name,logo,site FROM vendors ORDER BY name")->fetchAll();
+  echo json_encode(['site'=>'larrelectrico.uy','generated'=>date('c'),'categories'=>$cats,'vendors'=>$vendors,'count'=>count($prods),'products'=>$prods], JSON_UNESCAPED_SLASHES|JSON_INVALID_UTF8_SUBSTITUTE);
 }catch(Exception $ex){ http_response_code(500); echo json_encode(['error'=>$ex->getMessage()]); }

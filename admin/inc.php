@@ -6,6 +6,7 @@ function e($s){ return htmlspecialchars((string)$s,ENT_QUOTES,'UTF-8'); }
 function money($n){ return $n===null?'—':'$'.number_format((float)$n,2,',','.'); }
 function imgu($u){ global $CFG; if(!$u)return null; return strpos($u,'http')===0?$u:$CFG['img_base'].ltrim($u,'/'); }
 function admin(){ return $_SESSION['admin'] ?? null; }
+function tip($t){ return '<span class="tip">?<span class="tipbox">'.e($t).'</span></span>'; }
 function require_admin(){ if(!admin()){ header('Location: login.php'); exit; } }
 function csrf(){ if(empty($_SESSION['csrf']))$_SESSION['csrf']=bin2hex(random_bytes(16)); return $_SESSION['csrf']; }
 function check_csrf(){ if(($_POST['csrf']??'')!==($_SESSION['csrf']??'x')){ http_response_code(400); exit('CSRF'); } }
@@ -22,5 +23,6 @@ function ico($n,$s=18){ $P=[
  'search'=>'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>','plus'=>'<path d="M12 5v14M5 12h14"/>','trash'=>'<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/>',
  'save'=>'<path d="M5 3h12l4 4v14H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/>','img'=>'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="m4 18 5-5 4 4 3-3 4 4"/>',
  'video'=>'<rect x="3" y="5" width="14" height="14" rx="2"/><path d="m21 7-4 3 4 3z"/>','chev'=>'<path d="m9 6 6 6-6 6"/>','edit'=>'<path d="M4 20h4L18 10l-4-4L4 16z"/><path d="m13 5 4 4"/>',
- 'bolt'=>'<path d="M13 2 3 14h7l-1 8 10-12h-7z"/>','eye'=>'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+ 'bolt'=>'<path d="M13 2 3 14h7l-1 8 10-12h-7z"/>','eye'=>'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ 'image'=>'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="m4 18 5-5 4 4 3-3 4 4"/>','file'=>'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/>'
  ]; return '<svg viewBox="0 0 24 24" width="'.$s.'" height="'.$s.'" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'.($P[$n]??$P['box']).'</svg>'; }

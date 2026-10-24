@@ -63,14 +63,84 @@ function renderCart(){
 function openCart(){el('#drawer').classList.add('on');el('#ov').classList.add('on');}
 function closeCart(){el('#drawer').classList.remove('on');el('#ov').classList.remove('on');}
 function toast(t){let e=el('#toast');if(!e){e=document.createElement('div');e.id='toast';e.className='toast';document.body.appendChild(e);}e.innerHTML=svg('check',18)+'<span>'+t+'</span>';e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),1800);}
+function clearCart(){CART=[];localStorage.setItem('larr_cart','[]');renderCart();}
+let PAYINFO=null;
+async function getPayInfo(){ if(PAYINFO)return PAYINFO; try{PAYINFO=await (await fetch(API+'payinfo.php')).json();}catch(e){PAYINFO={methods:{},surcharge:0.09,mp_enabled:false,wa:WA};} return PAYINFO; }
+function waMessage(o,pay,info,name){
+  const m=(info.methods||{})[pay]||{}; const L=[];
+  L.push('Hola Larr Eléctrico! Soy '+name+'. Quiero confirmar este pedido:','');
+  (o.lines||[]).forEach(l=>L.push('• '+l.qty+'x '+l.name+(l.sku?' ('+l.sku+')':'')));
+  L.push('','Subtotal: '+money(o.subtotal),'IVA (22%): '+money(o.iva),'Total con IVA: '+money(o.total));
+  L.push('','Medio de pago: '+(m.label||pay));
+  if(pay==='mp') L.push('(con 9% de recargo)');
+  if(pay==='transfer'&&m.accounts) m.accounts.forEach(a=>L.push(a.bank+': '+a.num));
+  if(pay==='giros') L.push('Giro a la C.I. 3.977.308-8');
+  L.push('Pedido #'+o.order);
+  return 'https://wa.me/'+WA+'?text='+encodeURIComponent(L.join('\n'));
+}
 async function checkout(){
-  if(!CART.length)return; const btn=el('#checkout');btn.textContent=T.proc;
-  let order=null;
-  try{const r=await fetch(API+'order.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:CART.map(c=>({id:c.id,qty:c.qty}))})});order=await r.json();}catch(e){}
-  let msg='Hola Larr Eléctrico! Quiero hacer un pedido:%0A%0A';let tot=0;
-  CART.forEach(c=>{tot+=(c.price||0)*c.qty;msg+=`• ${c.qty}x ${c.name}${c.sku?' ('+c.sku+')':''}%0A`;});
-  const iva=tot*IVA;msg+=`%0ASubtotal: ${money(tot)}%0AIVA (22%25): ${money(iva)}%0ATotal con IVA: ${money(tot+iva)}`;if(order&&order.order)msg+=`%0APedido #${order.order}`;
-  window.open(`https://wa.me/${WA}?text=${msg}`,'_blank'); btn.textContent='Finalizar por WhatsApp';
+  if(!CART.length)return;
+  const info=await getPayInfo();
+  const sub=CART.reduce((s,c)=>s+(c.price||0)*c.qty,0), iva=sub*IVA, tot=sub+iva;
+  const methods=info.methods||{}; const keys=Object.keys(methods);
+  let ov=el('#coOv'); if(!ov){ov=document.createElement('div');ov.id='coOv';ov.className='co-ov';document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="co-modal" role="dialog" aria-modal="true">
+    <button class="co-x" id="coX" aria-label="Cerrar">${svg('x',20)}</button>
+    <h3 class="co-h">Finalizar compra</h3>
+    <div class="co-scroll">
+      <div class="co-sec"><div class="co-lb">${svg('user',15)} Tus datos</div>
+        <input class="co-inp" id="coName" placeholder="Nombre y apellido *">
+        <div class="co-row"><input class="co-inp" id="coPhone" placeholder="Teléfono / WhatsApp *"><input class="co-inp" id="coEmail" placeholder="Email (opcional)"></div>
+      </div>
+      <div class="co-sec"><div class="co-lb">${svg('cart',15)} Medio de pago</div>
+        <div class="co-pays">${keys.map((k,i)=>{const m=methods[k];const dis=(k==='mp'&&!info.mp_enabled);
+          return `<label class="co-pay${dis?' off':''}"><input type="radio" name="copay" value="${k}" ${i===0?'checked':''} ${dis?'disabled':''}>
+          <span class="co-paybody"><span class="co-payt">${m.label}${k==='mp'?` <span class="co-sur">+${Math.round(info.surcharge*100)}%</span>`:''}</span>
+          <span class="co-payd">${m.desc||''}${dis?' · se activa al cargar las credenciales':''}</span>
+          ${k==='transfer'&&m.accounts?`<span class="co-acc">${m.accounts.map(a=>`<span><b>${a.bank}</b> ${a.num}</span>`).join('')}</span>`:''}</span>
+          <span class="co-radio"></span></label>`;}).join('')}</div>
+      </div>
+      <div class="co-sec"><textarea class="co-inp" id="coNote" placeholder="Comentario o nota del pedido (opcional)" rows="2"></textarea></div>
+    </div>
+    <div class="co-foot">
+      <div class="co-tot">
+        <div class="co-trow"><span>Subtotal</span><span>${money(sub)}</span></div>
+        <div class="co-trow"><span>IVA (22%)</span><span>${money(iva)}</span></div>
+        <div class="co-trow" id="coSurRow" style="display:none"><span>Recargo Mercado Pago (9%)</span><span id="coSur"></span></div>
+        <div class="co-trow co-grand"><span>Total</span><span id="coTot">${money(tot)}</span></div>
+      </div>
+      <button class="btn btn-pri btn-lg co-go" id="coGo">${svg('wa',18)}<span>Confirmar por WhatsApp</span></button>
+      <div class="co-msg" id="coMsg"></div>
+    </div></div>`;
+  requestAnimationFrame(()=>ov.classList.add('on'));
+  const close=()=>ov.classList.remove('on');
+  el('#coX').onclick=close; ov.onclick=e=>{if(e.target===ov)close();};
+  try{const me=await fetch(API+'auth.php?action=me').then(r=>r.json());if(me&&me.user){if(me.user.name)el('#coName').value=me.user.name;if(me.user.email)el('#coEmail').value=me.user.email;if(me.user.phone)el('#coPhone').value=me.user.phone;}}catch(e){}
+  const updTot=()=>{const k=(ov.querySelector('input[name=copay]:checked')||{}).value;const go=el('#coGo');
+    if(k==='mp'){const sur=tot*info.surcharge;el('#coSurRow').style.display='flex';el('#coSur').textContent=money(sur);el('#coTot').textContent=money(tot+sur);go.innerHTML=svg('arrow',18)+'<span>Pagar con Mercado Pago</span>';}
+    else{el('#coSurRow').style.display='none';el('#coTot').textContent=money(tot);go.innerHTML=svg('wa',18)+'<span>Confirmar por WhatsApp</span>';}
+    go.onclick=()=>confirmCheckout(info,close);};
+  ov.querySelectorAll('input[name=copay]').forEach(r=>r.onchange=updTot); updTot();
+}
+async function confirmCheckout(info,close){
+  const name=el('#coName').value.trim(),phone=el('#coPhone').value.trim(),email=el('#coEmail').value.trim(),note=el('#coNote').value.trim();
+  const pay=(document.querySelector('input[name=copay]:checked')||{}).value||'transfer';
+  const msgEl=el('#coMsg'),go=el('#coGo');
+  if(!name||!phone){msgEl.textContent='Completá tu nombre y teléfono.';msgEl.className='co-msg err';return;}
+  const lbl=go.innerHTML; go.disabled=true; go.innerHTML='<span>'+T.proc+'</span>';
+  let o=null;
+  try{o=await fetch(API+'order.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:CART.map(c=>({id:c.id,qty:c.qty})),customer:name,phone,email,note,payment:pay})}).then(r=>r.json());}catch(e){}
+  if(!o||!o.ok){msgEl.textContent='No pudimos registrar el pedido. Probá de nuevo.';msgEl.className='co-msg err';go.disabled=false;go.innerHTML=lbl;return;}
+  if(pay==='mp'){
+    if(info.mp_enabled){
+      try{const mp=await fetch(API+'mp.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({order:o.order})}).then(r=>r.json());
+        if(mp&&mp.ok&&mp.init_point){clearCart();location.href=mp.init_point;return;}}catch(e){}
+      msgEl.textContent='No se pudo iniciar Mercado Pago. Te derivamos a WhatsApp.';msgEl.className='co-msg err';
+    }else{msgEl.textContent='Mercado Pago aún no está activo. Te derivamos a WhatsApp.';msgEl.className='co-msg';}
+  }
+  const wa=waMessage(o,pay,info,name);
+  clearCart(); go.disabled=false; go.innerHTML=lbl; close(); closeCart(); toast('Pedido registrado · #'+o.order);
+  window.open(wa,'_blank');
 }
 /* WISHLIST */
 let WL=JSON.parse(localStorage.getItem('larr_wl')||'[]');
@@ -205,6 +275,7 @@ async function initProduct(){
       ${specs.length?`<div class="pp-specs"><h3>${svg('chip',18)} Especificaciones técnicas</h3><table class="spectable">${specs.map((s,i)=>`<tr class="${i%2?'alt':''}"><td class="k"><span class="sdot"></span>${s[0]}</td><td class="v">${s[1]}</td></tr>`).join('')}</table></div>`:''}
       ${(p.desc||p.s_desc)?`<div class="pp-specs"><h3 style="margin-top:22px">Descripción</h3><div class="pp-desc">${p.desc||p.s_desc}</div></div>`:''}
       ${videoHtml?`<div class="pp-specs"><h3 style="margin-top:22px">${svg('fire',18)} Unboxing / Video</h3>${videoHtml}</div>`:''}
+      ${(p.docs&&p.docs.length)?`<div class="pp-specs"><h3 style="margin-top:22px">${svg('shield',18)} Documentos y fichas técnicas</h3><div class="pp-docs">${p.docs.map(dc=>`<a class="pp-doc" href="${imgu(dc.url)}" target="_blank" rel="noopener"><span class="di"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/></svg></span><span class="dn">${dc.name||'Documento'}</span><span class="dl"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m-4.5-4.5L12 14l4.5-4.5M4 20h16"/></svg></span></a>`).join('')}</div></div>`:''}
     </div></div>
     <section class="sec" style="padding:40px 0 0"><h2 style="font-size:22px;font-weight:700">Productos relacionados</h2><div class="pgrid" id="rel" style="margin-top:20px"></div></section>`;
   let q=1;el('#qm').onclick=()=>{q=Math.max(1,q-1);el('#qv').textContent=q;};el('#qp').onclick=()=>{q++;el('#qv').textContent=q;};
@@ -262,6 +333,31 @@ function initLiveSearch(d){
   inp.addEventListener('focus',e=>{if(e.target.value.trim().length>=2)render(e.target.value);});
   document.addEventListener('click',e=>{if(!form.contains(e.target))drop.classList.remove('on');});
 }
+async function initMarquee(){
+  const m=document.querySelector('.marq'); if(!m)return; const d=await getData();
+  const vs=(d.vendors||[]).filter(v=>v.name);
+  if(!vs.length)return;
+  const one=vs.map(v=>v.logo?`<span class="mlogo" title="${(v.name||'').replace(/"/g,'')}"><img src="${imgu(v.logo)}" alt="${(v.name||'').replace(/"/g,'')}" onerror="this.parentNode.innerHTML=this.alt"></span>`:`<span>${v.name}</span>`).join('');
+  m.innerHTML=one+one;
+}
+async function initHeroShow(){
+  const stage=el('#heroShow'); if(!stage)return; const d=await getData();
+  let pool=d.products.filter(p=>((p.images&&p.images[0])||p.img)&&p.price&&p.featured);
+  if(pool.length<3) pool=d.products.filter(p=>((p.images&&p.images[0])||p.img)&&p.price).sort((a,b)=>(b.sales||0)-(a.sales||0)).slice(0,8);
+  if(!pool.length)return; let i=0;
+  const show=()=>{const p=pool[i%pool.length];const im=imgu((p.images&&p.images[0])||p.img);
+    const card=document.createElement('a'); card.className='hs-card'; card.href='producto.html?id='+p.id;
+    card.innerHTML=`<div class="hs-badge">${svg('star',13)} Destacado</div><div class="hs-img"><img src="${im}" onerror="this.style.visibility='hidden'"></div><div class="hs-info"><div class="hs-name">${p.name}</div><div class="hs-price">${money(p.price)} <span>+ IVA</span></div></div><div class="hs-cta">Ver producto ${svg('arrow',14)}</div>`;
+    const old=stage.firstElementChild; if(old){old.classList.add('out');setTimeout(()=>old.remove(),600);}
+    stage.appendChild(card); setTimeout(()=>card.classList.add('in'),30);
+    // dots
+    let dots=stage.parentNode.querySelector('.hs-dots'); if(!dots){dots=document.createElement('div');dots.className='hs-dots';stage.parentNode.appendChild(dots);dots.innerHTML=pool.slice(0,Math.min(pool.length,6)).map((_,k)=>`<span data-k="${k}"></span>`).join('');}
+    [...dots.children].forEach((x,k)=>x.classList.toggle('on',k===i%Math.min(pool.length,6)));
+    i++;
+  };
+  show(); let timer=setInterval(show,3200);
+  stage.addEventListener('mouseenter',()=>{clearInterval(timer);}); stage.addEventListener('mouseleave',()=>{timer=setInterval(show,3200);});
+}
 function openMobMenu(cats){ let m=el('#mobmenu');
   if(!m){m=document.createElement('div');m.id='mobmenu';m.className='mobmenu';document.body.appendChild(m);}
   m.innerHTML=`<div class="mh"><a class="brand" href="index.html"><span class="bk">${svg('bolt',18)}</span><span class="brand-tx">Larr<b>Eléctrico</b></span></a><button class="icbtn" id="mobClose">${svg('x',20)}</button></div>
@@ -286,6 +382,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const db2=el('#drawerB');if(db2)db2.addEventListener('click',e=>{const q=e.target.closest('[data-q]');if(q){const[id,op]=q.dataset.q.split(':');const it=CART.find(c=>c.id===+id);setQty(+id,it.qty+(op==='+'?1:-1));return;}const r=e.target.closest('[data-rm]');if(r)setQty(+r.dataset.rm,0);});
   const io=new IntersectionObserver(es=>es.forEach((x,i)=>{if(x.isIntersecting){x.target.style.transitionDelay=(Math.min(x.intersectionRatio,1)*0)+'ms';x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.1});
   els('.reveal').forEach(x=>io.observe(x));
+  if(el('#heroShow'))initHeroShow();
+  if(document.querySelector('.marq'))initMarquee();
   if(el('#homeGrid'))getData().then(()=>wireCards(el('#homeGrid')));
   if(el('#bestGrid'))getData().then(()=>wireCards(el('#bestGrid')));
   if(el('#grid')&&el('#catlist'))initCatalog();
