@@ -1,4 +1,5 @@
 <?php
+require_once(__DIR__.'/pwagate.php'); require_once(__DIR__.'/swreg.php');
 function ah($title){ $u=admin(); $cur=basename($_SERVER['PHP_SELF']);
  $nav=[['index.php','dash','Dashboard'],['products.php','box','Productos'],['bulk.php','edit','Edición masiva'],['categories.php','grid','Categorías'],['vendors.php','tag','Vendors'],['orders.php','cart','Pedidos'],['carts.php','bell','Carritos abandonados'],['reviews.php','star','Reseñas'],['customers.php','users','Clientes'],['settings.php','cog','Configuración']];
  ob_start(); ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title><?=e($title)?> · Admin Larr Eléctrico</title>
@@ -183,16 +184,14 @@ function af(){ echo '</div></div></div>
 (function(){
  document.addEventListener("keydown",function(e){ if(e.key==="Escape")document.body.classList.remove("nav-open"); });
 })();
-/* ===== PWA: service worker + instalar ===== */
+/* ===== PWA: boton instalar (el registro del SW va en sw_reg) ===== */
 (function(){
- if("serviceWorker" in navigator){
-  window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
- }
  var deferred=null, btn=document.getElementById("pwaInstall");
  if(btn)btn.style.display="none";
  window.addEventListener("beforeinstallprompt",function(e){ e.preventDefault(); deferred=e; if(btn){btn.style.display="inline-flex";} });
  if(btn)btn.addEventListener("click",function(){ if(!deferred)return; deferred.prompt(); deferred.userChoice.finally(function(){ deferred=null; btn.style.display="none"; }); });
  window.addEventListener("appinstalled",function(){ if(btn)btn.style.display="none"; });
 })();
-</script>
-</body></html>'; }
+</script>';
+pwa_gate(); sw_reg();
+echo '</body></html>'; }

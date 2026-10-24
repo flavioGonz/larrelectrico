@@ -1,5 +1,6 @@
-/* Larr Admin PWA service worker */
-const VER = 'larradmin-v1';
+﻿/* Larr Admin PWA service worker */
+const BUILD = '1792877910'; /* sello estampado en cada deploy */
+const VER = 'larradmin-' + BUILD;
 const STATIC = VER + '-static';
 const PRECACHE = [
   './offline.html',
@@ -11,6 +12,10 @@ const PRECACHE = [
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(STATIC).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
+});
+
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
