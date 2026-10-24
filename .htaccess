@@ -1,0 +1,8 @@
+AddCharset UTF-8 .js .css .json .html
+AddDefaultCharset UTF-8
+DirectoryIndex index.html index.php
+<FilesMatch "\.(js|css|json)$">
+<IfModule mod_headers.c>
+Header set Cache-Control "no-cache, max-age=0, must-revalidate"
+</IfModule>
+</FilesMatch>

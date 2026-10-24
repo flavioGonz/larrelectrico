@@ -1,0 +1,10 @@
+# Secrets
+config.php
+# One-time maintenance scripts (DB access)
+_export/
+# Build/catalog cache
+catalog.json
+node_modules/
+# OS
+Thumbs.db
+.DS_Store
