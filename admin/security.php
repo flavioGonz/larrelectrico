@@ -100,7 +100,44 @@ ah('Seguridad');
   <p class="desc" style="margin-top:14px">Ingreso biométrico con Face ID / huella usando una passkey del dispositivo. Lo activás una vez y entrás sin contraseña.</p>
   <button class="btn btn-g" disabled style="opacity:.6;cursor:default">En preparación</button>
  </div>
+
+ <div class="sec-card">
+  <div class="sh"><span class="sec-ic"><?=ico('bell',21)?></span><h2>Notificaciones de compras</h2></div>
+  <span class="state off" id="pushState"><span class="d"></span>Comprobando…</span>
+  <p class="desc" style="margin-top:14px">Recibí un aviso en tu teléfono cada vez que entra una compra, incluso con la app cerrada.</p>
+  <button class="btn btn-pri" id="pushBtn"><?=ico('bell',16)?> Activar notificaciones</button>
+  <div id="pushHint" class="desc" style="margin-top:12px;display:none"></div>
+ </div>
 </div>
+<script>
+(function(){
+ var btn=document.getElementById('pushBtn'), st=document.getElementById('pushState'), hint=document.getElementById('pushHint');
+ function setState(t,on){ if(st){ st.className='state '+(on?'on':'off'); st.innerHTML='<span class="d"></span>'+t; } }
+ if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)){
+   setState('No disponible aquí',false); if(btn){btn.disabled=true;btn.style.opacity='.6';} if(hint){hint.style.display='block';hint.textContent='Instalá y abrí el panel como app (PWA) para activar las notificaciones.';} return;
+ }
+ function u8(b64){ var pad='='.repeat((4-b64.length%4)%4); var s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/'); var raw=atob(s); var a=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a; }
+ function idbSet(k,v){ return new Promise(function(res){ try{ var o=indexedDB.open('larradmin',1); o.onupgradeneeded=function(){ try{o.result.createObjectStore('kv');}catch(e){} }; o.onsuccess=function(){ try{ var tx=o.result.transaction('kv','readwrite'); tx.objectStore('kv').put(v,k); tx.oncomplete=function(){res(true);}; tx.onerror=function(){res(false);}; }catch(e){res(false);} }; o.onerror=function(){res(false);}; }catch(e){res(false);} }); }
+ function refresh(){ navigator.serviceWorker.ready.then(function(reg){ reg.pushManager.getSubscription().then(function(s){ if(s){ setState('Activadas',true); if(btn){btn.innerHTML='Desactivar notificaciones'; btn.setAttribute('data-on','1'); btn.className='btn btn-g';} } else { setState('Desactivadas',false); } }).catch(function(){ setState('Desactivadas',false); }); }); }
+ function enable(){
+   Notification.requestPermission().then(function(perm){
+     if(perm!=='granted'){ setState('Permiso denegado',false); if(hint){hint.style.display='block';hint.textContent='Activá los permisos de notificación para este sitio.';} return; }
+     navigator.serviceWorker.ready.then(function(reg){
+       fetch('push_sub.php').then(function(r){return r.json();}).then(function(pk){
+         if(!pk.publicKey){ setState('Falta configurar el servidor',false); return; }
+         reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:u8(pk.publicKey)}).then(function(sub){
+           fetch('push_sub.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub.toJSON())})
+            .then(function(r){return r.json();}).then(function(d){ if(d.token){ idbSet('pushToken',d.token); } setState('Activadas',true); if(btn){btn.innerHTML='Desactivar notificaciones'; btn.setAttribute('data-on','1'); btn.className='btn btn-g';} });
+         }).catch(function(){ setState('No se pudo suscribir',false); });
+       });
+     });
+   });
+ }
+ function disable(){ navigator.serviceWorker.ready.then(function(reg){ reg.pushManager.getSubscription().then(function(s){ if(s)s.unsubscribe(); setState('Desactivadas',false); if(btn){btn.innerHTML='Activar notificaciones'; btn.removeAttribute('data-on'); btn.className='btn btn-pri';} }); }); }
+ if(btn){ btn.addEventListener('click',function(){ btn.getAttribute('data-on')?disable():enable(); }); }
+ refresh();
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 (function(){

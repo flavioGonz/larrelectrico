@@ -1,6 +1,7 @@
 <?php
 require(__DIR__.'/../inc/init.php');
 require_once(__DIR__.'/../inc/mailer.php');
+require_once(__DIR__.'/../inc/webpush.php');
 header('Content-Type: application/json; charset=utf-8');
 $in=json_decode(file_get_contents('php://input'),true)?:[];
 try{
@@ -41,5 +42,6 @@ try{
  $oid=$pdo->lastInsertId();
  if(!empty($u['id'])){ try{ $pdo->prepare("DELETE FROM carts WHERE user_id=?")->execute([$u['id']]); }catch(Exception $e){} } // carrito convertido → sin recordatorio
  if($email && filter_var($email,FILTER_VALIDATE_EMAIL)){ @mail_send($email,'Recibimos tu pedido #'.$oid.' — Larr Eléctrico',mail_order($oid,$lines,$subtotal,$iva,$total,$pagar,$disc_amt,$pay,$cust?:'')); }
+ try{ webpush_notify_admins(); }catch(Exception $e){}
  echo json_encode(['ok'=>true,'order'=>(int)$oid,'subtotal'=>$subtotal,'iva'=>$iva,'total'=>$total,'discount'=>$disc,'discount_amt'=>$disc_amt,'total_pagar'=>$pagar,'lines'=>$lines,'warnings'=>$warn]);
 }catch(Exception $e){ http_response_code(500); echo json_encode(['error'=>$e->getMessage()]); }
