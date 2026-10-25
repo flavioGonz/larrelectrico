@@ -44,43 +44,33 @@ ah('Productos');
 @media(max-width:820px){
  .prodtbl{display:none}
  .toolbar{flex-wrap:wrap}
- .pm-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
- .pm-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
- .pm-top{display:flex;align-items:center;gap:12px}
- .pm-th{width:50px;height:50px;border-radius:11px;object-fit:contain;background:var(--bg3,#fafafc);border:1px solid var(--line);padding:5px;flex-shrink:0}
- .pm-nm{flex:1;min-width:0;color:var(--ink);display:block}
- .pm-nm b{font-size:14.5px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
- .pm-nm span{font-size:12px;color:var(--mut2)}
- .pm-feat{border:none;cursor:pointer;flex-shrink:0;font-size:17px;width:36px;height:36px;border-radius:10px;line-height:1}
- .pm-row{display:flex;align-items:flex-end;gap:12px;margin-top:13px;flex-wrap:wrap}
- .pm-fld label{display:block;font-size:11px;color:var(--mut2);font-weight:600;margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em}
- .pm-price{display:flex;align-items:center;gap:3px;border:1px solid var(--line2,#d2d2d7);border-radius:10px;padding:0 11px;height:42px}
- .pm-price span{color:var(--mut2);font-weight:600}
- .pm-price input{border:none;outline:none;width:92px;height:42px;font-size:15px;font-weight:700;-moz-appearance:textfield}
- .pm-price input::-webkit-outer-spin-button,.pm-price input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
- .pm-ed{margin-left:auto;height:42px;align-self:flex-end}
- .pm-meta{margin-top:11px;font-size:12px;color:var(--mut2);display:flex;align-items:center;gap:5px}
+ /* lista compacta: una fila por producto, toda la fila es tappable */
+ .pm-list{display:block;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:16px}
+ .pm-row2{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--ink);transition:background .12s}
+ .pm-row2:last-child{border-bottom:none}
+ .pm-row2:active{background:#eef4ff}
+ .pm-row2 .th{width:44px;height:44px;border-radius:10px;object-fit:contain;background:var(--bg3,#fafafc);border:1px solid var(--line);padding:4px;flex-shrink:0}
+ .pm-row2 .nm{flex:1;min-width:0}
+ .pm-row2 .nm b{font-size:14px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+ .pm-row2 .nm span{font-size:11.5px;color:var(--mut2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+ .pm-row2 .rt{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+ .pm-row2 .rt .pr{font-size:14px;font-weight:700;white-space:nowrap;letter-spacing:-.01em}
+ .pm-row2 .rt .stk{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap}
+ .pm-row2 .rt .stk.ok{background:#eafaf0;color:var(--ok)}
+ .pm-row2 .rt .stk.low{background:#fff4e9;color:var(--amber)}
+ .pm-row2 .rt .stk.no{background:#fdeef3;color:var(--red)}
+ .pm-row2 .chev{color:var(--mut2);flex-shrink:0;display:grid;place-items:center}
+ .pm-row2 .chev svg{width:17px;height:17px}
 }
 </style>
 <div class="pm-list">
-<?php foreach($rows as $p): $im=imgu($p['img']); $stk=(int)$p['stock']; $pv=$p['price']!==null?rtrim(rtrim(number_format((float)$p['price'],2,'.',''),'0'),'.'):''; ?>
- <div class="pm-card">
-  <div class="pm-top">
-   <?php if($im):?><img class="pm-th" src="<?=e($im)?>" onerror="this.style.visibility='hidden'"><?php else:?><div class="pm-th"></div><?php endif;?>
-   <a class="pm-nm" href="product.php?id=<?=$p['id']?>"><b><?=e($p['name'])?></b><span><?=e($p['sku'])?:'—'?> · <?=e($p['brand'])?:'Sin marca'?></span></a>
-   <button class="pm-feat badge <?=$p['featured']?'ok':'no'?>" onclick="toggleFeat(<?=$p['id']?>,this)" title="Destacado"><?=$p['featured']?'★':'☆'?></button>
-  </div>
-  <div class="pm-row">
-   <div class="pm-fld"><label>Stock</label>
-    <div class="stepper2"><button type="button" onclick="bump(<?=$p['id']?>,-1)">−</button><input id="stk<?=$p['id']?>" type="number" value="<?=$stk?>" onchange="setStock(<?=$p['id']?>,this.value)"><button type="button" onclick="bump(<?=$p['id']?>,1)">+</button></div>
-   </div>
-   <div class="pm-fld"><label>Precio</label>
-    <div class="pm-price"><span>$</span><input type="number" step="0.01" value="<?=e($pv)?>" onchange="setPrice(<?=$p['id']?>,this.value)"></div>
-   </div>
-   <a class="btn btn-g btn-sm pm-ed" href="product.php?id=<?=$p['id']?>"><?=ico('edit',16)?></a>
-  </div>
-  <div class="pm-meta"><?=ico('star',13)?> <?=(int)$p['sales']?> vendidos</div>
- </div>
+<?php foreach($rows as $p): $im=imgu($p['img']); $stk=(int)$p['stock']; $scls=$stk<=0?'no':($stk<=5?'low':'ok'); ?>
+ <a class="pm-row2" href="product.php?id=<?=$p['id']?>">
+  <?php if($im):?><img class="th" src="<?=e($im)?>" onerror="this.style.visibility='hidden'"><?php else:?><div class="th"></div><?php endif;?>
+  <div class="nm"><b><?=e($p['name'])?></b><span><?=e($p['sku'])?:'—'?> · <?=e($p['brand'])?:'Sin marca'?></span></div>
+  <div class="rt"><div class="pr"><?=money($p['price'])?></div><span class="stk <?=$scls?>"><?=$stk?> u.</span></div>
+  <span class="chev"><?=ico('chev',17)?></span>
+ </a>
 <?php endforeach;?>
 </div>
 
