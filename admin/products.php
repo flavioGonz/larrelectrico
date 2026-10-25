@@ -46,9 +46,16 @@ ah('Productos');
  .toolbar{flex-wrap:wrap}
  /* lista compacta: una fila por producto, toda la fila es tappable */
  .pm-list{display:block;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:16px}
- .pm-row2{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--ink);transition:background .12s}
- .pm-row2:last-child{border-bottom:none}
- .pm-row2:active{background:#eef4ff}
+ .pm-swipe{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+ .pm-swipe:last-child{border-bottom:none}
+ .pm-acts{position:absolute;top:0;right:0;bottom:0;display:flex;align-items:stretch}
+ .pm-acts .pa{width:48px;border:none;font-size:21px;display:grid;place-items:center;cursor:pointer;color:var(--blue)}
+ .pm-acts .pa.minus,.pm-acts .pa.plus{background:#eaf0f7}
+ .pm-acts .pa-stk{width:46px;display:grid;place-items:center;font-weight:800;font-size:15px;background:#fff;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+ .pm-acts .pa.feat{width:54px;background:#fff4e9;color:var(--amber);font-size:19px}
+ .pm-acts .pa.feat.on{background:var(--amber);color:#fff}
+ .pm-row2{position:relative;z-index:1;display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fff;color:var(--ink);transition:transform .22s cubic-bezier(.3,.9,.3,1);will-change:transform}
+ .pm-row2:active{background:#fafbfd}
  .pm-row2 .th{width:44px;height:44px;border-radius:10px;object-fit:contain;background:var(--bg3,#fafafc);border:1px solid var(--line);padding:4px;flex-shrink:0}
  .pm-row2 .nm{flex:1;min-width:0}
  .pm-row2 .nm b{font-size:14px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
@@ -65,14 +72,23 @@ ah('Productos');
 </style>
 <div class="pm-list">
 <?php foreach($rows as $p): $im=imgu($p['img']); $stk=(int)$p['stock']; $scls=$stk<=0?'no':($stk<=5?'low':'ok'); ?>
- <a class="pm-row2" href="product.php?id=<?=$p['id']?>">
-  <?php if($im):?><img class="th" src="<?=e($im)?>" onerror="this.style.visibility='hidden'"><?php else:?><div class="th"></div><?php endif;?>
-  <div class="nm"><b><?=e($p['name'])?></b><span><?=e($p['sku'])?:'—'?> · <?=e($p['brand'])?:'Sin marca'?></span></div>
-  <div class="rt"><div class="pr"><?=money($p['price'])?></div><span class="stk <?=$scls?>"><?=$stk?> u.</span></div>
-  <span class="chev"><?=ico('chev',17)?></span>
- </a>
+ <div class="pm-swipe">
+  <div class="pm-acts">
+   <button type="button" class="pa minus" onclick="swStock(<?=$p['id']?>,-1)">−</button>
+   <span class="pa-stk" id="pstk-<?=$p['id']?>"><?=$stk?></span>
+   <button type="button" class="pa plus" onclick="swStock(<?=$p['id']?>,1)">+</button>
+   <button type="button" class="pa feat <?=$p['featured']?'on':''?>" onclick="swFeat(<?=$p['id']?>,this)">★</button>
+  </div>
+  <a class="pm-row2" href="product.php?id=<?=$p['id']?>">
+   <?php if($im):?><img class="th" src="<?=e($im)?>" onerror="this.style.visibility='hidden'"><?php else:?><div class="th"></div><?php endif;?>
+   <div class="nm"><b><?=e($p['name'])?></b><span><?=e($p['sku'])?:'—'?> · <?=e($p['brand'])?:'Sin marca'?></span></div>
+   <div class="rt"><div class="pr"><?=money($p['price'])?></div><span class="stk <?=$scls?>" id="pbad-<?=$p['id']?>"><?=$stk?> u.</span></div>
+   <span class="chev"><?=ico('chev',17)?></span>
+  </a>
+ </div>
 <?php endforeach;?>
 </div>
+<div class="swipe-hint" style="display:none;text-align:center;font-size:12px;color:var(--mut2);margin:-6px 0 14px">← Deslizá una fila para stock rápido y destacar</div>
 
 <div style="color:var(--mut2);font-size:13px"><?=number_format($total,0,',','.')?> productos</div>
 <?php if($pages>1): $base='?q='.urlencode($q).'&sort='.$sort.'&p='; ?>
@@ -87,5 +103,34 @@ function toggleFeat(id,el){post({act:'togglefeat',id}).then(function(){var on=el
 let st;function setStock(id,v){clearTimeout(st);st=setTimeout(function(){post({act:'stock',id:id,stock:v});},400);}
 let pt;function setPrice(id,v){clearTimeout(pt);pt=setTimeout(function(){post({act:'price',id:id,price:v});},500);}
 function bump(id,d){var i=document.getElementById('stk'+id);if(!i)return;var n=Math.max(0,(parseInt(i.value,10)||0)+d);i.value=n;setStock(id,n);}
+/* ===== acciones del swipe (stock rápido + destacar) ===== */
+var swT={};
+function swStock(id,d){ var s=document.getElementById('pstk-'+id); if(!s)return; var n=Math.max(0,(parseInt(s.textContent,10)||0)+d); s.textContent=n;
+  var bad=document.getElementById('pbad-'+id); if(bad){ bad.textContent=n+' u.'; bad.className='stk '+(n<=0?'no':(n<=5?'low':'ok')); }
+  clearTimeout(swT[id]); swT[id]=setTimeout(function(){post({act:'stock',id:id,stock:n});},450); }
+function swFeat(id,btn){ post({act:'togglefeat',id:id}).then(function(){ btn.classList.toggle('on'); }); }
+/* ===== gestos swipe en la lista ===== */
+(function(){
+ var ACT=196;
+ function closeAll(except){ var rs=document.querySelectorAll('.pm-row2'); for(var i=0;i<rs.length;i++){ if(rs[i]!==except){ rs[i].style.transform=''; rs[i].removeAttribute('data-open'); } } }
+ var rows=document.querySelectorAll('.pm-swipe');
+ for(var k=0;k<rows.length;k++){ (function(sw){
+   var row=sw.querySelector('.pm-row2'); if(!row)return;
+   var sx=0,cx=0,sy=0,drag=false,moved=false,horiz=false;
+   row.addEventListener('touchstart',function(e){ sx=cx=e.touches[0].clientX; sy=e.touches[0].clientY; drag=true; moved=false; horiz=false; },{passive:true});
+   row.addEventListener('touchmove',function(e){ if(!drag)return; cx=e.touches[0].clientX; var dx=cx-sx, dy=e.touches[0].clientY-sy;
+     if(!horiz && Math.abs(dx)<Math.abs(dy)+2){ drag=false; return; }
+     horiz=true; if(Math.abs(dx)>6)moved=true;
+     var base=row.getAttribute('data-open')?-ACT:0; var t=Math.min(0,Math.max(-ACT,base+dx)); row.style.transform='translateX('+t+'px)';
+   },{passive:true});
+   row.addEventListener('touchend',function(){ if(!drag)return; drag=false; var dx=cx-sx; var wasOpen=!!row.getAttribute('data-open');
+     if(!wasOpen){ if(dx<-48){ closeAll(row); row.style.transform='translateX(-'+ACT+'px)'; row.setAttribute('data-open','1'); } else { row.style.transform=''; } }
+     else { if(dx>48){ row.style.transform=''; row.removeAttribute('data-open'); } else { row.style.transform='translateX(-'+ACT+'px)'; } }
+   });
+   row.addEventListener('click',function(e){ if(moved){ e.preventDefault(); return; } if(row.getAttribute('data-open')){ e.preventDefault(); row.style.transform=''; row.removeAttribute('data-open'); } });
+ })(rows[k]); }
+ document.addEventListener('touchstart',function(e){ if(!e.target.closest('.pm-swipe')) closeAll(null); },{passive:true});
+ var hint=document.querySelector('.swipe-hint'); if(hint && rows.length && 'ontouchstart' in window){ hint.style.display='block'; }
+})();
 </script>
 <?php af();

@@ -44,11 +44,11 @@ ah($isNew?'Nuevo producto':'Editar producto');
 <form method="post" class="prodform">
 <input type="hidden" name="csrf" value="<?=csrf()?>">
 <div>
- <div class="panel"><div class="ph"><h2>Datos del producto</h2></div><div style="padding:18px 20px">
+ <div class="panel pf-datos"><div class="ph"><h2>Datos del producto</h2></div><div style="padding:18px 20px">
   <div class="field"><label>Nombre</label><input class="inp" name="name" value="<?=e($p['name'])?>" required></div>
   <div class="grid2"><div class="field"><label>Código / SKU</label><input class="inp" name="sku" value="<?=e($p['sku'])?>"></div>
   <div class="field"><label>Unidad</label><input class="inp" name="unit" value="<?=e($p['unit'])?>" placeholder="Unidad, Metro, KG…"></div></div>
-  <div class="grid2"><div class="field"><label>Precio (UYU, sin IVA) <?=tip('Cargá el precio SIN IVA. La tienda agrega el 22% automáticamente y muestra el precio final con IVA.')?></label><input class="inp" name="price" type="number" step="0.01" value="<?=e($p['price'])?>"></div>
+  <div class="grid2 pf-ps"><div class="field"><label>Precio (UYU, sin IVA) <?=tip('Cargá el precio SIN IVA. La tienda agrega el 22% automáticamente y muestra el precio final con IVA.')?></label><input class="inp" name="price" type="number" step="0.01" value="<?=e($p['price'])?>"></div>
   <div class="field"><label>Stock <?=tip('Cantidad disponible. Si es 0 el producto se muestra como "Bajo pedido"; 1-5 muestra "Últimas unidades".')?></label><input class="inp" name="stock" type="number" value="<?=(int)$p['stock']?>"></div></div>
   <div class="field"><label>Descripción corta</label><input class="inp" name="s_desc" value="<?=e($p['s_desc'])?>"></div>
   <div class="field"><label>Descripción completa</label>
@@ -58,7 +58,7 @@ ah($isNew?'Nuevo producto':'Editar producto');
  <div class="panel"><div class="ph"><h2>Especificaciones técnicas</h2><button type="button" class="btn btn-g btn-sm" onclick="addSpec()"><?=ico('plus',15)?>Agregar</button></div><div style="padding:14px 20px" id="specBox">
   <?php foreach($specs?:[['k'=>'','v'=>'']] as $s):?><div class="specrow" style="display:flex;gap:10px;margin-bottom:10px"><input class="inp" name="spec_k[]" placeholder="Característica (ej. Amperaje)" value="<?=e($s['k'])?>"><input class="inp" name="spec_v[]" placeholder="Valor (ej. 40A)" value="<?=e($s['v'])?>"><button type="button" class="btn btn-d btn-sm" onclick="this.parentNode.remove()"><?=ico('trash',15)?></button></div><?php endforeach;?>
  </div></div>
- <div class="panel"><div class="ph"><h2>Imágenes y unboxing</h2><button type="button" class="btn btn-g btn-sm" onclick="addImg()"><?=ico('plus',15)?>Agregar por URL</button></div><div style="padding:14px 20px">
+ <div class="panel pf-imgs"><div class="ph"><h2>Imágenes y unboxing</h2><button type="button" class="btn btn-g btn-sm" onclick="addImg()"><?=ico('plus',15)?>Agregar por URL</button></div><div style="padding:14px 20px">
   <div class="dropzone" id="dzImg" data-accept="image">
    <div class="dz-ic"><?=ico('image',26)?></div>
    <div class="dz-tx"><b>Arrastrá tus fotos acá</b><span>o hacé clic para elegir · JPG, PNG, WEBP · hasta 15MB</span></div>
@@ -102,7 +102,17 @@ ah($isNew?'Nuevo producto':'Editar producto');
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
 <style>
 .prodform{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
-@media(max-width:820px){.prodform{grid-template-columns:1fr;gap:16px}}
+.pf-ps{margin-bottom:0}
+@media(max-width:820px){
+ .prodform{grid-template-columns:1fr;gap:16px}
+ .prodform>div:first-child{display:flex;flex-direction:column;gap:16px}
+ .pf-imgs{order:-2}            /* foto primero */
+ .pf-datos{order:-1}          /* luego nombre + precio/stock */
+ .pf-datos .inp{font-size:16px;padding:12px 14px}
+ .pf-ps{grid-template-columns:1fr 1fr;background:#f5f9ff;border:1px solid #d9e8ff;border-radius:13px;padding:13px;margin-bottom:4px}
+ .pf-ps label{font-size:12px}
+ .pf-ps .inp{font-weight:700;font-size:17px}
+}
 #descrEditor{height:200px}.ql-toolbar.ql-snow,.ql-container.ql-snow{border-color:var(--line)}.ql-toolbar.ql-snow{border-radius:10px 10px 0 0}.ql-container.ql-snow{border-radius:0 0 10px 10px;font-family:Inter;font-size:14px}
 .dropzone{position:relative;display:flex;align-items:center;gap:14px;padding:18px;border:1.8px dashed var(--line2,#d4d4d8);border-radius:14px;background:var(--bg2,#fafafa);cursor:pointer;transition:.2s;overflow:hidden}
 .dropzone:hover{border-color:#8ab4ff;background:#f5f9ff}
