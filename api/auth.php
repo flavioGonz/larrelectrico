@@ -69,4 +69,4 @@ try{
    out(['ok'=>true,'user'=>$_SESSION['user']]);
  }
  out(['error'=>'acción desconocida']);
-}catch(Exception $e){ http_response_code(500); out(['error'=>$e->getMessage()]); }
+}catch(Exception $e){ http_response_code(500); out(['error'=>'Error del servidor. Probá de nuevo.']); }

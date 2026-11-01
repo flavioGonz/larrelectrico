@@ -1,0 +1,47 @@
+AddCharset UTF-8 .js .css .json .html
+AddDefaultCharset UTF-8
+DirectoryIndex index.html index.php
+Options -Indexes
+
+# ---- Cabeceras de seguridad ----
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+Header always set Cross-Origin-Opener-Policy "same-origin"
+</IfModule>
+
+# ---- Bloqueo de archivos sensibles ----
+<FilesMatch "(?i)\.(ps1|log|sql|sqlite|db|bak|bkp|old|sh|env|ini|yml|yaml|lock|mjs|md|gitignore)$">
+Require all denied
+</FilesMatch>
+<FilesMatch "(?i)(^config\.php$|\.sample\.php$|^composer\.(json|lock)$|^\.git)">
+Require all denied
+</FilesMatch>
+<FilesMatch "(?i)^(deploy|push|gen|bom|chk|readcfg|readmail)\.">
+Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(js|css|json)$">
+<IfModule mod_headers.c>
+Header set Cache-Control "no-cache, max-age=0, must-revalidate"
+</IfModule>
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+RewriteCond %{REQUEST_URI} !^/__construccion\.php$ [NC]
+RewriteCond %{REQUEST_URI} !^/admin(/|$) [NC]
+RewriteCond %{REQUEST_URI} !^/api/fx\.php [NC]
+RewriteCond %{REQUEST_URI} !^/\.well-known/ [NC]
+RewriteCond %{HTTP_COOKIE} !larr_access=lrx_gate_7f3k2v9qz1 [NC]
+RewriteRule ^ /__construccion.php [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ / [R=301,L]
+</IfModule>

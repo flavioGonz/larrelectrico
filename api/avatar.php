@@ -12,6 +12,6 @@ $dir=__DIR__.'/../assets/uploads/avatars'; if(!is_dir($dir)) @mkdir($dir,0755,tr
 $fn='u'.$u['id'].'_'.substr(md5(uniqid()),0,6).'.'.$ext;
 if(!move_uploaded_file($f['tmp_name'],"$dir/$fn")){ echo json_encode(['error'=>'No se pudo guardar la imagen.']); exit; }
 $url='assets/uploads/avatars/'.$fn;
-try{ $pdo=db(); $pdo->prepare("UPDATE users SET avatar=? WHERE id=?")->execute([$url,$u['id']]); }catch(Exception $e){ echo json_encode(['error'=>$e->getMessage()]); exit; }
+try{ $pdo=db(); $pdo->prepare("UPDATE users SET avatar=? WHERE id=?")->execute([$url,$u['id']]); }catch(Exception $e){ echo json_encode(['error'=>'No se pudo guardar la imagen.']); exit; }
 $_SESSION['user']['avatar']=$url;
 echo json_encode(['ok'=>true,'avatar'=>$url]);

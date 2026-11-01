@@ -46,4 +46,4 @@ try{
  if($email && filter_var($email,FILTER_VALIDATE_EMAIL)){ @mail_send($email,'Recibimos tu pedido #'.$oid.' — Larr Eléctrico',mail_order($oid,$lines,$subtotal,$iva,$total,$pagar,$disc_amt,$pay,$cust?:'')); }
  try{ webpush_notify_admins(); }catch(Exception $e){}
  echo json_encode(['ok'=>true,'order'=>(int)$oid,'subtotal'=>$subtotal,'iva'=>$iva,'total'=>$total,'discount'=>$disc,'discount_amt'=>$disc_amt,'total_pagar'=>$pagar,'lines'=>$lines,'warnings'=>$warn]);
-}catch(Exception $e){ http_response_code(500); echo json_encode(['error'=>$e->getMessage()]); }
+}catch(Exception $e){ http_response_code(500); echo json_encode(['error'=>'No se pudo procesar el pedido. Probá de nuevo.']); }

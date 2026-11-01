@@ -1,4 +1,11 @@
 <?php
+@ini_set('display_errors','0');
+if(session_status()!==PHP_SESSION_ACTIVE){
+  @ini_set('session.cookie_httponly','1');
+  @ini_set('session.cookie_samesite','Lax');
+  @ini_set('session.use_strict_mode','1');
+  if(!empty($_SERVER['HTTPS'])||($_SERVER['HTTP_X_FORWARDED_PROTO']??'')==='https') @ini_set('session.cookie_secure','1');
+}
 session_start();
 $CFG = require(__DIR__.'/../config.php');
 function db(){ static $pdo=null; global $CFG;

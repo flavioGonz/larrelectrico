@@ -1,0 +1,8 @@
+# Carpeta de archivos subidos: nunca ejecutar código, solo servir estáticos
+<FilesMatch "(?i)\.(php|php3|php4|php5|php7|php8|phtml|phar|cgi|pl|py|pyc|sh|asp|aspx|jsp)$">
+Require all denied
+</FilesMatch>
+Options -ExecCGI -Indexes
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+AddType text/plain .php .phtml .phar

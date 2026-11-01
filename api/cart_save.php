@@ -21,4 +21,4 @@ try{
     ON DUPLICATE KEY UPDATE email=VALUES(email),name=VALUES(name),items=VALUES(items),total=VALUES(total),updated=NOW(),reminded=0")
     ->execute([$u['id'],$u['email'],$u['name'],$js,$total,$token]);
   echo json_encode(['ok'=>true]);
-}catch(Exception $e){ http_response_code(500); echo json_encode(['error'=>$e->getMessage()]); }
+}catch(Exception $e){ http_response_code(500); echo json_encode(['error'=>'No se pudo guardar el carrito.']); }

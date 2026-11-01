@@ -52,4 +52,4 @@ try{
   $pdo->prepare("UPDATE orders SET items=?, total=? WHERE id=?")->execute([json_encode($meta,JSON_UNESCAPED_UNICODE),$amount,$oid]);
   $url=($CFG['mp_sandbox']??true) ? ($j['sandbox_init_point']??$j['init_point']) : ($j['init_point']??$j['sandbox_init_point']);
   echo json_encode(['ok'=>true,'init_point'=>$url,'pref'=>$j['id'],'amount'=>$amount]);
-}catch(Exception $e){ http_response_code(500); echo json_encode(['error'=>$e->getMessage()]); }
+}catch(Exception $e){ http_response_code(500); echo json_encode(['error'=>'No se pudo iniciar el pago. Probá de nuevo.']); }
