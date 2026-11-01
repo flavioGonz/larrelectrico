@@ -1,11 +1,13 @@
 <?php
 require(__DIR__.'/../inc/init.php');
+require_once(__DIR__.'/../inc/fx.php');
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 try{
   $pdo=db();
+  fx_maybe_update($pdo); $rate=fx_rate($pdo);
   $cats=$pdo->query("SELECT c.id,c.name,c.slug,c.ordering,(SELECT COUNT(*) FROM product_categories pc WHERE pc.category_id=c.id) n FROM categories c ORDER BY c.ordering, c.name")->fetchAll();
-  $prods=$pdo->query("SELECT id,sku,name,slug,brand,price,stock,unit,s_desc,descr,img,featured,sales,video,vendor_id FROM products ORDER BY featured DESC, sales DESC, id DESC")->fetchAll();
+  $prods=$pdo->query("SELECT id,sku,name,slug,brand,price,stock,unit,s_desc,descr,img,featured,sales,video,vendor_id,currency FROM products ORDER BY featured DESC, sales DESC, id DESC")->fetchAll();
   // map categories per product
   $pc=$pdo->query("SELECT product_id,category_id FROM product_categories")->fetchAll();
   $catName=[]; foreach($cats as $c)$catName[$c['id']]=$c['name'];
@@ -23,9 +25,10 @@ try{
     $p['catids']=array_values(array_unique($ids));
     $p['categories']=array_values(array_filter(array_map(fn($i)=>$catName[$i]??null,$p['catids'])));
     $p['images']=$imgsAll[$p['id']]??($p['img']?[$p['img']]:[]);
-    $p['price']=$p['price']!==null?(float)$p['price']:null;
+    $p['currency']=strtoupper($p['currency']??'UYU');
+    $p['price']=fx_to_uyu($p['price'],$p['currency'],$rate);
     $p['stock']=(int)$p['stock']; $p['id']=(int)$p['id']; $p['featured']=(int)$p['featured']; $p['sales']=(int)$p['sales'];
   }
   $vendors=$pdo->query("SELECT id,name,logo,site FROM vendors ORDER BY name")->fetchAll();
-  echo json_encode(['site'=>'larrelectrico.uy','generated'=>date('c'),'categories'=>$cats,'vendors'=>$vendors,'count'=>count($prods),'products'=>$prods], JSON_UNESCAPED_SLASHES|JSON_INVALID_UTF8_SUBSTITUTE);
+  echo json_encode(['site'=>'larrelectrico.uy','generated'=>date('c'),'fx'=>fx_info($pdo),'default_currency'=>'UYU','categories'=>$cats,'vendors'=>$vendors,'count'=>count($prods),'products'=>$prods], JSON_UNESCAPED_SLASHES|JSON_INVALID_UTF8_SUBSTITUTE);
 }catch(Exception $ex){ http_response_code(500); echo json_encode(['error'=>$ex->getMessage()]); }

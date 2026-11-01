@@ -1,5 +1,6 @@
 <?php
 require(__DIR__.'/../inc/init.php');
+require_once(__DIR__.'/../inc/fx.php');
 require_once(__DIR__.'/../inc/mailer.php');
 require_once(__DIR__.'/../inc/webpush.php');
 header('Content-Type: application/json; charset=utf-8');
@@ -10,13 +11,14 @@ try{
  if(!$items) { http_response_code(400); echo json_encode(['error'=>'carrito vacío']); exit; }
  $ids=array_values(array_unique(array_map(fn($i)=>(int)$i['id'],$items)));
  $ph=implode(',',array_fill(0,count($ids),'?'));
- $s=$pdo->prepare("SELECT id,name,sku,price,stock FROM products WHERE id IN ($ph)"); $s->execute($ids);
+ $s=$pdo->prepare("SELECT id,name,sku,price,stock,currency FROM products WHERE id IN ($ph)"); $s->execute($ids);
  $pr=[]; foreach($s->fetchAll() as $r)$pr[$r['id']]=$r;
+ $FXRATE=fx_rate($pdo);
  $subtotal=0; $lines=[]; $warn=[];
  foreach($items as $it){
    $p=$pr[(int)$it['id']]??null; if(!$p)continue;
    $q=max(1,(int)$it['qty']);
-   $price=(float)$p['price'];
+   $price=fx_to_uyu($p['price'],$p['currency']??'UYU',$FXRATE);
    $subtotal+=$price*$q;
    $stk=(int)$p['stock'];
    if($stk<=0) $warn[]=['id'=>(int)$p['id'],'name'=>$p['name'],'type'=>'bajo_pedido'];

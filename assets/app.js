@@ -36,14 +36,29 @@ const catIcon=name=>{const n=(name||'').toUpperCase();
  if(/CONTACT|RELE|REL.|AUTOMAT|CONTROL|TEMPOR/.test(n))return'chip';if(/FERRET|TORNILL|GRAMPA|PRECINT|ACCESOR|HERRAM|ABRAZAD|GALVANIZ/.test(n))return'tool';
  return'pkg';};
 const IVA=0.22;
-const money=n=>n==null?null:'$'+new Intl.NumberFormat('es-UY',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+let RATE=41, CUR=(function(){try{return localStorage.getItem('larr_cur')||'UYU'}catch(e){return 'UYU'}})();
+const nf2=new Intl.NumberFormat('es-UY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const money=n=>{ if(n==null)return null; return (CUR==='USD'&&RATE>0)?('US$ '+nf2.format(n/RATE)):('$'+nf2.format(n)); };
 const withIva=n=>n==null?null:n*(1+IVA);
+function initCurTog(){ try{
+  var host=document.querySelector('.tb-right'); if(!host||document.getElementById('curTog'))return;
+  var w=document.createElement('div'); w.id='curTog'; w.className='curtog';
+  w.innerHTML='<button type="button" data-c="UYU"'+(CUR==='UYU'?' class="on"':'')+'>$ UYU</button><button type="button" data-c="USD"'+(CUR==='USD'?' class="on"':'')+'>US$ USD</button>';
+  w.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var c=b.getAttribute('data-c');if(c===CUR)return;try{localStorage.setItem('larr_cur',c);}catch(_){}location.reload();});
+  host.insertBefore(w,host.firstChild);
+  if(!document.getElementById('curTogCss')){var s=document.createElement('style');s.id='curTogCss';
+   s.textContent='.curtog{display:inline-flex;gap:2px;background:rgba(255,255,255,.16);border-radius:999px;padding:2px;margin-right:12px;vertical-align:middle}.curtog button{border:0;background:transparent;color:inherit;font:inherit;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;cursor:pointer;opacity:.72;line-height:1}.curtog button.on{background:#fff;color:#0b1b3a;opacity:1}';
+   document.head.appendChild(s);}
+ }catch(e){} }
+if(document.readyState!=='loading')initCurTog();else document.addEventListener('DOMContentLoaded',initCurTog);
 const el=s=>document.querySelector(s), els=s=>[...document.querySelectorAll(s)];
 const imgu=u=>!u?null:(u.startsWith('http')?u:IMGB+u.replace(/^\/+/,''));
 const T={add:'Agregado al carrito',empty:'Tu carrito está vacío.',proc:'Procesando…',brand:' — Larr Eléctrico',consult:'Consultar',nostock:'Bajo pedido',instock:'En stock',sold:'vendidos',last:'Últimas unidades'};
 window.pkgBox='<div class="noimg">'+svg('pkg',46)+'</div>';
 let DATA=null;
-async function getData(){ if(DATA)return DATA; try{const r=await fetch('/api/catalog.php');DATA=await r.json();}catch(e){const r=await fetch('/catalog.json');DATA=await r.json();} return DATA; }
+async function getData(){ if(DATA)return DATA; try{const r=await fetch('/api/catalog.php');DATA=await r.json();}catch(e){const r=await fetch('/catalog.json');DATA=await r.json();}
+  try{ if(DATA&&DATA.fx&&DATA.fx.rate>0)RATE=DATA.fx.rate; if(!localStorage.getItem('larr_cur')&&DATA&&DATA.default_currency)CUR=DATA.default_currency; }catch(e){}
+  return DATA; }
 /* CART */
 let CART=JSON.parse(localStorage.getItem('larr_cart')||'[]');
 const saveCart=()=>{localStorage.setItem('larr_cart',JSON.stringify(CART));renderCart();syncCart();};

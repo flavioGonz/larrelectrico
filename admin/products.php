@@ -29,7 +29,7 @@ ah('Productos');
 <tr id="prow-<?=$p['id']?>">
 <td class="c-img"><a class="pic" href="product.php?id=<?=$p['id']?>"><?php if($im):?><img src="<?=e($im)?>" onerror="this.parentNode.classList.add('empty');this.remove()"><?php else:?><span class="noimg"><?=ico('image',18)?></span><?php endif;?></a></td>
 <td class="c-name"><a href="product.php?id=<?=$p['id']?>" class="pn"><?=e($p['name'])?></a><div class="meta"><?php if($p['sku']):?><span class="sku"><?=e($p['sku'])?></span><?php endif;?><?php if($p['brand']):?><span class="br"><?=e($p['brand'])?></span><?php endif;?></div></td>
-<td class="c-price"><div class="iedit"><span class="pfx">$</span><input type="number" step="0.01" min="0" value="<?=number_format((float)$p['price'],2,'.','')?>" onchange="setPrice(<?=$p['id']?>,this.value)" onfocus="this.select()"></div></td>
+<td class="c-price"><div class="iedit"><span class="pfx"><?=(($p['currency']??'UYU')==='USD')?'US$':'$'?></span><input type="number" step="0.01" min="0" value="<?=number_format((float)$p['price'],2,'.','')?>" onchange="setPrice(<?=$p['id']?>,this.value)" onfocus="this.select()" title="<?=(($p['currency']??'UYU')==='USD')?'Precio en dólares':'Precio en pesos'?>"></div></td>
 <td class="c-stock"><div class="iedit stk <?=$scls?>"><input type="number" min="0" value="<?=$stk?>" onchange="setStock(<?=$p['id']?>,this.value);stkTint(this)" onfocus="this.select()"></div></td>
 <td class="c-sales"><span class="sal"><?=ico('bolt',13)?><?=(int)$p['sales']?></span></td>
 <td class="c-feat tc"><button type="button" class="fstar <?=$p['featured']?'on':''?>" title="Marcar como destacado" onclick="toggleFeat(<?=$p['id']?>,this)"><?=ico('star',17)?></button></td>

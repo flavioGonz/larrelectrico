@@ -4,14 +4,15 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS product_docs(id INT AUTO_INCREMENT PRIMAR
 $isNew=($_GET['id']??'')==='new'; $id=$isNew?0:(int)($_GET['id']??0);
 if($_SERVER['REQUEST_METHOD']==='POST'){ check_csrf();
   $d=$_POST;
-  $fields=[trim($d['name']),trim($d['sku']),trim($d['brand']),($d['price']===''?null:(float)$d['price']),(int)$d['stock'],trim($d['unit']),trim($d['video']),(int)!empty($d['featured']),trim($d['s_desc']),$d['descr'],($d['vendor_id']?:null)];
+  $cur=in_array(strtoupper($d['currency']??'UYU'),['USD','UYU'])?strtoupper($d['currency']):'UYU';
+  $fields=[trim($d['name']),trim($d['sku']),trim($d['brand']),($d['price']===''?null:(float)$d['price']),(int)$d['stock'],trim($d['unit']),trim($d['video']),(int)!empty($d['featured']),trim($d['s_desc']),$d['descr'],($d['vendor_id']?:null),$cur];
   if($isNew){
     $nid=(int)$pdo->query("SELECT COALESCE(MAX(id),1000)+1 n FROM products")->fetch()['n'];
     $img=trim($d['img_main']??'');
-    $st=$pdo->prepare("INSERT INTO products(id,name,sku,brand,price,stock,unit,video,featured,s_desc,descr,vendor_id,img) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $st=$pdo->prepare("INSERT INTO products(id,name,sku,brand,price,stock,unit,video,featured,s_desc,descr,vendor_id,currency,img) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $st->execute(array_merge([$nid],$fields,[$img])); $id=$nid;
   }else{
-    $st=$pdo->prepare("UPDATE products SET name=?,sku=?,brand=?,price=?,stock=?,unit=?,video=?,featured=?,s_desc=?,descr=?,vendor_id=? WHERE id=?");
+    $st=$pdo->prepare("UPDATE products SET name=?,sku=?,brand=?,price=?,stock=?,unit=?,video=?,featured=?,s_desc=?,descr=?,vendor_id=?,currency=? WHERE id=?");
     $st->execute(array_merge($fields,[$id]));
   }
   // categories
@@ -30,7 +31,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){ check_csrf();
   foreach(($d['doc_url']??[]) as $i=>$u){ $u=trim($u); if($u!==''){ $nm=trim($d['doc_name'][$i]??'')?:'Documento'; $pdo->prepare("INSERT INTO product_docs(product_id,url,name,ordering) VALUES(?,?,?,?)")->execute([$id,$u,$nm,$i]); } }
   flash('Producto guardado correctamente.'); header('Location: product.php?id='.$id); exit;
 }
-$p=$isNew?['id'=>0,'name'=>'','sku'=>'','brand'=>'','price'=>'','stock'=>0,'unit'=>'','video'=>'','featured'=>0,'s_desc'=>'','descr'=>'','vendor_id'=>'','img'=>'']:$pdo->query("SELECT * FROM products WHERE id=$id")->fetch();
+$p=$isNew?['id'=>0,'name'=>'','sku'=>'','brand'=>'','price'=>'','stock'=>0,'unit'=>'','video'=>'','featured'=>0,'s_desc'=>'','descr'=>'','vendor_id'=>'','img'=>'','currency'=>'UYU']:$pdo->query("SELECT * FROM products WHERE id=$id")->fetch();
 if(!$p){ flash('Producto no encontrado.'); header('Location: products.php'); exit; }
 $cats=$pdo->query("SELECT id,name FROM categories ORDER BY name")->fetchAll();
 $pcats=$isNew?[]:array_column($pdo->query("SELECT category_id FROM product_categories WHERE product_id=$id")->fetchAll(),'category_id');
@@ -48,7 +49,7 @@ ah($isNew?'Nuevo producto':'Editar producto');
   <div class="field"><label>Nombre</label><input class="inp" name="name" value="<?=e($p['name'])?>" required></div>
   <div class="grid2"><div class="field"><label>Código / SKU</label><input class="inp" name="sku" value="<?=e($p['sku'])?>"></div>
   <div class="field"><label>Unidad</label><input class="inp" name="unit" value="<?=e($p['unit'])?>" placeholder="Unidad, Metro, KG…"></div></div>
-  <div class="grid2 pf-ps"><div class="field"><label>Precio (UYU, sin IVA) <?=tip('Cargá el precio SIN IVA. La tienda agrega el 22% automáticamente y muestra el precio final con IVA.')?></label><input class="inp" name="price" type="number" step="0.01" value="<?=e($p['price'])?>"></div>
+  <div class="grid2 pf-ps"><div class="field"><label>Precio sin IVA <?=tip('Cargá el precio SIN IVA en la moneda elegida. Si es USD, la tienda lo convierte a pesos con el tipo de cambio del día. Siempre se agrega el 22% de IVA al mostrar.')?></label><div style="display:flex;gap:8px"><input class="inp" name="price" type="number" step="0.01" value="<?=e($p['price'])?>" style="flex:1"><select class="inp sel2" name="currency" style="max-width:112px"><option value="UYU"<?=(($p['currency']??'UYU')==='UYU')?' selected':''?>>$ UYU</option><option value="USD"<?=(($p['currency']??'UYU')==='USD')?' selected':''?>>US$ USD</option></select></div></div>
   <div class="field"><label>Stock <?=tip('Cantidad disponible. Si es 0 el producto se muestra como "Bajo pedido"; 1-5 muestra "Últimas unidades".')?></label><input class="inp" name="stock" type="number" value="<?=(int)$p['stock']?>"></div></div>
   <div class="field"><label>Descripción corta</label><input class="inp" name="s_desc" value="<?=e($p['s_desc'])?>"></div>
   <div class="field"><label>Descripción completa</label>

@@ -2,7 +2,14 @@
 $pdo=db(); global $CFG;
 $pdo->exec("CREATE TABLE IF NOT EXISTS settings(k VARCHAR(60) PRIMARY KEY, v TEXT) DEFAULT CHARSET=utf8mb4");
 function setng($pdo,$k,$v){ $pdo->prepare("INSERT INTO settings(k,v) VALUES(?,?) ON DUPLICATE KEY UPDATE v=VALUES(v)")->execute([$k,(string)$v]); }
+require_once(__DIR__.'/../inc/fx.php');
+if(isset($_GET['fx'])&&$_GET['fx']==='now'){ $f=fx_fetch_brou(); if($f){ fx_set($pdo,$f['rate'],$f['src']); flash('Cotización actualizada: '.$f['rate'].' ('.$f['src'].').'); } else { flash('No se pudo obtener la cotización ahora. Probá de nuevo o cargala manual.'); } header('Location: settings.php'); exit; }
 if($_SERVER['REQUEST_METHOD']==='POST'){ check_csrf();
+  if(isset($_POST['fx_save'])){
+    if((float)($_POST['usd_rate']??0)>0){ setng($pdo,'usd_rate',round((float)$_POST['usd_rate'],4)); setng($pdo,'usd_rate_date',date('Y-m-d')); setng($pdo,'usd_rate_src','manual'); }
+    setng($pdo,'fx_auto', isset($_POST['fx_auto'])?'1':'0');
+    flash('Tipo de cambio guardado.'); header('Location: settings.php'); exit;
+  }
   // texto
   foreach(['site_name','wa_number','mail_from','mail_from_name','mail_reply','mp_public_key'] as $k){ if(isset($_POST[$k])) setng($pdo,$k,trim($_POST[$k])); }
   // numéricos
@@ -64,5 +71,24 @@ ah('Configuración');
 
 </div>
 <div style="margin-top:22px;display:flex;justify-content:flex-end"><button class="btn btn-pri" style="padding:12px 26px"><?=ico('save',16)?>Guardar configuración</button></div>
+</form>
+<?php $fx=fx_info($pdo); ?>
+<form method="post" style="margin-top:20px">
+<input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="fx_save" value="1">
+<div class="panel"><div class="ph"><h2><?=ico('card',16)?> Tipo de cambio (USD → UYU)</h2>
+ <span class="badge <?=$fx['auto']?'ok':'am'?>"><?=$fx['auto']?'Automático':'Manual'?></span></div>
+ <div style="padding:18px 20px">
+  <div class="grid2" style="gap:16px">
+   <div class="field"><label>Cotización del dólar (venta) <?=tip('Pesos por dólar. Se usa para mostrar y cobrar los productos cargados en USD.')?></label>
+    <div style="display:flex;align-items:center;gap:8px"><span style="color:var(--mut)">$</span><input class="inp" name="usd_rate" type="number" step="0.0001" min="0" value="<?=e($fx['rate'])?>" style="width:150px"></div></div>
+   <div class="field"><label>Actualización automática</label>
+    <label style="display:flex;align-items:center;gap:10px;height:42px;cursor:pointer"><input type="checkbox" name="fx_auto" <?=$fx['auto']?'checked':''?>> <span>Diaria desde el Banco República</span></label></div>
+  </div>
+  <p style="font-size:12.5px;color:var(--mut2);line-height:1.6;margin:4px 0 14px">Fuente: <b><?=e($fx['src']?:'—')?></b> · Última actualización: <b><?=e($fx['date']?:'—')?></b>. Con "automático" se toma el <b>dólar billete venta del BROU</b> una vez por día. Si cargás un valor a mano, queda fijo hasta la próxima actualización.</p>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+   <button class="btn btn-pri"><?=ico('save',16)?>Guardar tipo de cambio</button>
+   <a class="btn btn-g" href="?fx=now"><?=ico('bolt',16)?>Actualizar ahora desde el BROU</a>
+  </div>
+ </div></div>
 </form>
 <?php af();
