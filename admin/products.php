@@ -1,12 +1,22 @@
 <?php require(__DIR__.'/inc.php'); require(__DIR__.'/layout.php'); require_admin();
 $pdo=db();
+require_once(__DIR__.'/../inc/audit.php'); audit_migrate($pdo);
 if($_SERVER['REQUEST_METHOD']==='POST'){ check_csrf();
-  if(($_POST['act']??'')==='togglefeat'){ $pdo->prepare("UPDATE products SET featured=1-featured WHERE id=?")->execute([(int)$_POST['id']]); }
-  if(($_POST['act']??'')==='stock'){ $pdo->prepare("UPDATE products SET stock=? WHERE id=?")->execute([(int)$_POST['stock'],(int)$_POST['id']]); }
-  if(($_POST['act']??'')==='price'){ $pv=(float)str_replace(',','.',(string)($_POST['price']??'')); if($pv<0)$pv=0; $pdo->prepare("UPDATE products SET price=? WHERE id=?")->execute([$pv,(int)$_POST['id']]); }
-  if(($_POST['act']??'')==='del'){ $pid=(int)$_POST['id'];
-    foreach(['product_images','product_specs','product_categories','product_docs','cart_items','order_items','reviews'] as $t){ try{ $col=in_array($t,['cart_items','order_items'])?'product_id':'product_id'; $pdo->prepare("DELETE FROM $t WHERE product_id=?")->execute([$pid]); }catch(\Throwable $e){} }
-    try{ $pdo->prepare("DELETE FROM products WHERE id=?")->execute([$pid]); }catch(\Throwable $e){ exit('err'); }
+  $pid=(int)($_POST['id']??0);
+  if(($_POST['act']??'')==='togglefeat'){ $pdo->prepare("UPDATE products SET featured=1-featured, updated_at=? WHERE id=?")->execute([audit_now(),$pid]);
+    $nf=(int)(($pdo->query("SELECT featured FROM products WHERE id=$pid")->fetch()['featured'])??0);
+    audit_log($pdo,$pid,'destacado',[['f'=>'featured','label'=>'Destacado','old'=>$nf?'No':'Sí','new'=>$nf?'Sí':'No']]); }
+  if(($_POST['act']??'')==='stock'){ $old=$pdo->query("SELECT stock FROM products WHERE id=$pid")->fetch(); $ns=(int)$_POST['stock'];
+    $pdo->prepare("UPDATE products SET stock=?, updated_at=? WHERE id=?")->execute([$ns,audit_now(),$pid]);
+    if($old && (int)$old['stock']!==$ns) audit_log($pdo,$pid,'stock',[['f'=>'stock','label'=>'Stock','old'=>(int)$old['stock'],'new'=>$ns]]); }
+  if(($_POST['act']??'')==='price'){ $pv=(float)str_replace(',','.',(string)($_POST['price']??'')); if($pv<0)$pv=0;
+    $old=$pdo->query("SELECT price FROM products WHERE id=$pid")->fetch();
+    $pdo->prepare("UPDATE products SET price=?, updated_at=? WHERE id=?")->execute([$pv,audit_now(),$pid]);
+    if($old && abs((float)$old['price']-$pv)>0.0001) audit_log($pdo,$pid,'precio',[['f'=>'price','label'=>'Precio','old'=>(float)$old['price'],'new'=>$pv]]); }
+  if(($_POST['act']??'')==='del'){
+    $nm=$pdo->query("SELECT name FROM products WHERE id=$pid")->fetch();
+    foreach(['product_images','product_specs','product_categories','product_docs','cart_items','order_items','reviews'] as $t){ try{ $pdo->prepare("DELETE FROM $t WHERE product_id=?")->execute([$pid]); }catch(\Throwable $e){} }
+    try{ $pdo->prepare("DELETE FROM products WHERE id=?")->execute([$pid]); audit_log($pdo,$pid,'eliminar',[],'Producto eliminado: '.($nm['name']??('#'.$pid))); }catch(\Throwable $e){ exit('err'); }
   }
   exit('ok');
 }

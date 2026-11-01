@@ -161,6 +161,7 @@ ah('Configuración');
   <div class="fxnode a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9M4 9h16v11H4zM9 20v-6h6v6"/></svg></div>
   <div class="fxnode b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6M5 10v9M19 10v9M9 10v9M15 10v9M3 21h18"/></svg></div>
   <div class="fxcoin">$</div>
+  <div class="fxcoin c2">$</div>
  </div>
  <div class="fxcheck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
  <div class="fxtitle" id="fxtitle">Buscando la cotización</div>
@@ -183,8 +184,9 @@ ah('Configuración');
 .fxnode svg{width:28px;height:28px}
 .fxnode.b::after{content:"";position:absolute;inset:-6px;border-radius:22px;border:2px solid var(--blue);opacity:0;animation:fxpulse 1.6s ease-out infinite}
 @keyframes fxpulse{0%{transform:scale(.8);opacity:.55}100%{transform:scale(1.25);opacity:0}}
-.fxcoin{position:absolute;top:50%;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffd45e,#f5a623);box-shadow:0 4px 12px rgba(245,166,35,.5);display:grid;place-items:center;color:#7a4b00;font-weight:800;font-size:13px;animation:fxtravel 1.5s cubic-bezier(.65,0,.35,1) infinite}
-@keyframes fxtravel{0%{left:52px;transform:translateY(-50%) scale(.6);opacity:0}15%{opacity:1;transform:translateY(-50%) scale(1)}50%{left:calc(100% - 72px)}60%{opacity:1}74%{opacity:0;transform:translateY(-50%) scale(.6)}100%{opacity:0}}
+.fxcoin{position:absolute;top:50%;left:56px;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffd45e,#f5a623);box-shadow:0 4px 12px rgba(245,166,35,.5);display:grid;place-items:center;color:#7a4b00;font-weight:800;font-size:13px;animation:fxtravel 1.7s cubic-bezier(.4,0,.2,1) infinite}
+.fxcoin.c2{animation-delay:.85s}
+@keyframes fxtravel{0%{left:56px;opacity:0;transform:translateY(-50%) scale(.4)}14%{opacity:1;transform:translateY(-50%) scale(1)}66%{left:calc(100% - 80px);opacity:1;transform:translateY(-50%) scale(1)}80%{left:calc(100% - 80px);opacity:0;transform:translateY(-50%) scale(.5)}100%{opacity:0}}
 .fxtitle{font-size:18px;font-weight:800;letter-spacing:-.3px;color:var(--ink);margin-bottom:5px}
 .fxstep{font-size:13.5px;color:var(--mut);min-height:19px;transition:opacity .3s}
 .fxbar{height:6px;border-radius:999px;background:var(--line);overflow:hidden;margin:18px 2px 0}

@@ -1,5 +1,6 @@
 <?php require(__DIR__.'/inc.php'); require(__DIR__.'/layout.php'); require_admin();
 $pdo=db();
+require_once(__DIR__.'/../inc/audit.php'); audit_migrate($pdo);
 $pdo->exec("CREATE TABLE IF NOT EXISTS product_docs(id INT AUTO_INCREMENT PRIMARY KEY, product_id INT, url VARCHAR(400), name VARCHAR(200), ordering INT) DEFAULT CHARSET=utf8mb4");
 $isNew=($_GET['id']??'')==='new'; $id=$isNew?0:(int)($_GET['id']??0);
 if($_SERVER['REQUEST_METHOD']==='POST'){ check_csrf();
@@ -9,11 +10,17 @@ if($_SERVER['REQUEST_METHOD']==='POST'){ check_csrf();
   if($isNew){
     $nid=(int)$pdo->query("SELECT COALESCE(MAX(id),1000)+1 n FROM products")->fetch()['n'];
     $img=trim($d['img_main']??'');
-    $st=$pdo->prepare("INSERT INTO products(id,name,sku,brand,price,stock,unit,video,featured,s_desc,descr,vendor_id,currency,img) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-    $st->execute(array_merge([$nid],$fields,[$img])); $id=$nid;
+    $st=$pdo->prepare("INSERT INTO products(id,name,sku,brand,price,stock,unit,video,featured,s_desc,descr,vendor_id,currency,img,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $now=audit_now();
+    $st->execute(array_merge([$nid],$fields,[$img,$now,$now])); $id=$nid;
+    audit_log($pdo,$id,'crear',[],'Alta del producto: '.trim($d['name']));
   }else{
-    $st=$pdo->prepare("UPDATE products SET name=?,sku=?,brand=?,price=?,stock=?,unit=?,video=?,featured=?,s_desc=?,descr=?,vendor_id=?,currency=? WHERE id=?");
-    $st->execute(array_merge($fields,[$id]));
+    $before=$pdo->query("SELECT name,sku,brand,price,stock,unit,featured,s_desc,vendor_id,currency FROM products WHERE id=$id")->fetch();
+    $st=$pdo->prepare("UPDATE products SET name=?,sku=?,brand=?,price=?,stock=?,unit=?,video=?,featured=?,s_desc=?,descr=?,vendor_id=?,currency=?,updated_at=? WHERE id=?");
+    $st->execute(array_merge($fields,[audit_now(),$id]));
+    $after=['name'=>$fields[0],'sku'=>$fields[1],'brand'=>$fields[2],'price'=>$fields[3],'stock'=>$fields[4],'unit'=>$fields[5],'featured'=>$fields[7],'s_desc'=>$fields[8],'vendor_id'=>$fields[10],'currency'=>$fields[11]];
+    $ch=audit_diff($before?:[],$after,['name'=>'Nombre','sku'=>'SKU','brand'=>'Marca','price'=>'Precio','stock'=>'Stock','unit'=>'Unidad','featured'=>'Destacado','s_desc'=>'Descripción','vendor_id'=>'Vendor','currency'=>'Moneda']);
+    if($ch) audit_log($pdo,$id,'editar',$ch);
   }
   // categories
   $pdo->prepare("DELETE FROM product_categories WHERE product_id=?")->execute([$id]);
@@ -39,6 +46,7 @@ $specs=$isNew?[]:$pdo->query("SELECT k,v FROM product_specs WHERE product_id=$id
 $imgs=$isNew?[]:array_column($pdo->query("SELECT url FROM product_images WHERE product_id=$id ORDER BY ordering")->fetchAll(),'url');
 if(!$imgs && $p['img']) $imgs=[$p['img']];
 $docs=$isNew?[]:$pdo->query("SELECT url,name FROM product_docs WHERE product_id=$id ORDER BY ordering")->fetchAll();
+$aud=$isNew?[]:$pdo->query("SELECT * FROM product_audit WHERE product_id=$id ORDER BY id DESC LIMIT 60")->fetchAll();
 $vendors=$pdo->query("SELECT id,name FROM vendors ORDER BY name")->fetchAll();
 ah($isNew?'Nuevo producto':'Editar producto');
 ?>
@@ -99,6 +107,56 @@ ah($isNew?'Nuevo producto':'Editar producto');
  </div></div>
 </div>
 </form>
+
+<?php if(!$isNew): $cr=$p['created_at']??null; $up=$p['updated_at']??null; ?>
+<div class="panel auditp" style="margin-top:22px">
+ <div class="ph" style="flex-wrap:wrap;gap:8px"><h2><?=ico('eye',16)?> Historial de cambios</h2>
+  <div class="aud-ts">
+   <span><?=ico('plus',12)?>Creado: <b><?=$cr?e(date('d/m/Y H:i',strtotime($cr))):'—'?></b></span>
+   <span><?=ico('edit',12)?>Modificado: <b><?=$up?e(date('d/m/Y H:i',strtotime($up))):'—'?></b></span>
+  </div>
+ </div>
+ <div style="padding:6px 20px 14px">
+ <?php if(!$aud):?><div style="padding:22px;text-align:center;color:var(--mut2)">Sin cambios registrados. A partir de ahora se registra cada edición con quién la hizo y cuándo.</div>
+ <?php else:?>
+ <div class="aud-list">
+  <?php foreach($aud as $a): $bb=audit_badge($a['action']); $chs=json_decode($a['changes']?:'[]',true)?:[]; ?>
+  <div class="aud-row">
+   <div class="aud-dot <?=$bb[1]?>"></div>
+   <div class="aud-body">
+    <div class="aud-head"><span class="badge <?=$bb[1]?>"><?=$bb[0]?></span><span class="aud-admin"><?=e($a['admin_name']?:'—')?></span><span class="aud-time"><?=e(date('d/m/Y H:i',strtotime($a['created_at'])))?></span></div>
+    <?php if($a['note']):?><div class="aud-note"><?=e($a['note'])?></div><?php endif;?>
+    <?php if($chs):?><div class="aud-ch-wrap">
+     <?php foreach($chs as $c):?><div class="aud-ch"><span class="aud-f"><?=e($c['label']??($c['f']??''))?></span><span class="aud-old"><?=e(audit_val($c['old']??null))?></span><span class="aud-arr">→</span><span class="aud-new"><?=e(audit_val($c['new']??null))?></span></div><?php endforeach;?>
+    </div><?php endif;?>
+   </div>
+  </div>
+  <?php endforeach;?>
+ </div>
+ <?php endif;?>
+ </div>
+</div>
+<style>
+.auditp .aud-ts{display:flex;gap:16px;font-size:12px;color:var(--mut2);flex-wrap:wrap}
+.auditp .aud-ts span{display:inline-flex;align-items:center;gap:5px} .auditp .aud-ts svg{opacity:.6}
+.auditp .aud-ts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.aud-list{display:flex;flex-direction:column}
+.aud-row{display:flex;gap:13px;padding:12px 2px;border-bottom:1px solid var(--line)}
+.aud-row:last-child{border-bottom:none}
+.aud-dot{width:9px;height:9px;border-radius:50%;margin-top:6px;flex-shrink:0;background:var(--mut2)}
+.aud-dot.ok{background:var(--ok)} .aud-dot.am{background:#e0a21a} .aud-dot.no{background:var(--red)} .aud-dot.new{background:var(--blue)}
+.aud-body{flex:1;min-width:0}
+.aud-head{display:flex;align-items:center;gap:9px;font-size:13px;flex-wrap:wrap}
+.aud-admin{font-weight:600;color:var(--ink)} .aud-time{color:var(--mut2);font-size:12px;font-variant-numeric:tabular-nums}
+.aud-note{font-size:12.5px;color:var(--mut);margin-top:3px}
+.aud-ch-wrap{margin-top:7px;display:flex;flex-direction:column;gap:4px}
+.aud-ch{display:flex;align-items:center;gap:8px;font-size:12.5px;flex-wrap:wrap}
+.aud-f{min-width:92px;color:var(--mut2);font-weight:500}
+.aud-old{color:var(--mut);text-decoration:line-through;text-decoration-color:#e3a0b4}
+.aud-arr{color:var(--mut2)}
+.aud-new{color:var(--ink);font-weight:600}
+</style>
+<?php endif;?>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
 <style>
