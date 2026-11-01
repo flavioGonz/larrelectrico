@@ -63,7 +63,7 @@ const header=`
 </div></div>
 <div class="nav"><div class="nav-in">
 <button class="burger" id="burger" aria-label="Menú">${svg('menu',22)}</button>
-<a class="brand" href="index.html"><span class="bk">${svg('bolt',20)}</span><span class="brand-tx">Larr<b>Eléctrico</b><small>Materiales eléctricos</small></span></a>
+<a class="brand" href="index.html"><img src="assets/brand/logo.png" alt="Larr Eléctrico" class="brandlogo" style="height:42px;width:auto;display:block"></a>
 <form class="navsearch" action="catalogo.html" method="get" role="search">${svg('search',19)}<input name="q" placeholder="Buscar productos, marcas o códigos…" autocomplete="off"><button type="submit">Buscar</button></form>
 <div class="nav-act">
 <a class="actbtn" href="catalogo.html" id="mSearch" title="Buscar">${svg('search',22)}</a>
