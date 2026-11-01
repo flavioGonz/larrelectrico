@@ -1,5 +1,5 @@
 ﻿/* Larr Admin PWA service worker */
-const BUILD = '1792959017'; /* sello estampado en cada deploy */
+const BUILD = '1793543172'; /* sello estampado en cada deploy */
 const VER = 'larradmin-' + BUILD;
 const STATIC = VER + '-static';
 const PRECACHE = [
@@ -83,10 +83,12 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Navigations & dynamic (PHP): SOLO red (nunca servir admin viejo), fallback offline
+  // Navigations & dynamic (PHP): SOLO red, ignorando el cache HTTP; fallback offline
   if (req.mode === 'navigate' || url.pathname.endsWith('.php') || url.pathname.endsWith('/')) {
     e.respondWith(
-      fetch(req).catch(() => caches.match('./offline.html'))
+      fetch(req, { cache: 'reload' }).catch(() =>
+        fetch(req).catch(() => caches.match('./offline.html'))
+      )
     );
   }
 });
