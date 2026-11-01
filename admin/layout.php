@@ -44,13 +44,13 @@ label .lbl-ic{width:15px;height:15px;color:var(--mut2);margin-right:6px}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px}
 .kpi .l{font-size:12.5px;color:var(--mut2);font-weight:500;display:flex;align-items:center;gap:7px}.kpi .l svg{width:15px;height:15px;color:var(--blue)}
-.kpi .v{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-top:8px}
+.kpi .v{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums}
 .panel{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:22px}
 .panel .ph{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
 .panel .ph h2{font-size:15px;font-weight:600}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{text-align:left;padding:11px 16px;color:var(--mut2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);background:#fafafc}
-td{padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+td{padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:middle;font-variant-numeric:tabular-nums}
 tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfd}
 .thumb{width:40px;height:40px;border-radius:8px;object-fit:contain;background:#f2f2f5;border:1px solid var(--line);padding:3px}
 .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:10px;font-size:13.5px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:.18s}
