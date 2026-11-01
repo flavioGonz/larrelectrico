@@ -1,7 +1,8 @@
 <?php
 require_once(__DIR__.'/pwagate.php'); require_once(__DIR__.'/swreg.php');
 function ah($title){ $u=admin(); $cur=basename($_SERVER['PHP_SELF']);
- $nav=[['index.php','dash','Dashboard'],['products.php','box','Productos'],['bulk.php','edit','Edición masiva'],['categories.php','grid','Categorías'],['vendors.php','tag','Vendors'],['orders.php','cart','Pedidos'],['carts.php','bell','Carritos abandonados'],['reviews.php','star','Reseñas'],['customers.php','users','Clientes'],['settings.php','cog','Configuración'],['security.php','key','Seguridad']];
+ $navG=['Principal'=>[['index.php','dash','Dashboard'],['products.php','box','Productos'],['orders.php','cart','Pedidos'],['customers.php','users','Clientes']],'Catálogo'=>[['categories.php','grid','Categorías'],['vendors.php','tag','Vendors'],['reviews.php','star','Reseñas'],['bulk.php','edit','Edición masiva'],['carts.php','bell','Carritos']],'Sistema'=>[['settings.php','cog','Configuración'],['security.php','key','Seguridad']]];
+ $cnt=[]; try{$cnt['products.php']=(int)db()->query("SELECT COUNT(*) c FROM products")->fetch()['c'];}catch(\Throwable $e){} try{$cnt['orders.php']=(int)db()->query("SELECT COUNT(*) c FROM orders WHERE status='nuevo'")->fetch()['c'];}catch(\Throwable $e){} try{$cnt['carts.php']=(int)db()->query("SELECT COUNT(*) c FROM carts")->fetch()['c'];}catch(\Throwable $e){}
  ob_start(); ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title><?=e($title)?> · Admin Larr Eléctrico</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0b1b3a">
@@ -18,13 +19,29 @@ function ah($title){ $u=admin(); $cur=basename($_SERVER['PHP_SELF']);
 *{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}button,input,select,textarea{font-family:inherit}
 .app{display:grid;grid-template-columns:238px 1fr;min-height:100vh}
-.side{background:var(--navy);color:#cfd8ea;padding:20px 14px;position:sticky;top:0;height:100vh}
-.side .lg{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;color:#fff;padding:6px 10px 20px}
-.side .lg .b{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#0a84ff,#0071e3);display:grid;place-items:center}
-.side a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;font-size:14px;color:#aeb9cf;margin-bottom:2px;transition:.15s}
-.side a:hover{background:rgba(255,255,255,.07);color:#fff}
-.side a.on{background:var(--blue);color:#fff}
-.side a svg{width:18px;height:18px}
+.side{background:linear-gradient(180deg,#0c1e40,#081630);color:#aeb9cf;padding:16px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.side .lg{display:flex;align-items:center;gap:10px;padding:8px 10px 14px}
+.side .lg .b{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0a84ff,#0071e3);display:grid;place-items:center;flex-shrink:0;box-shadow:0 6px 16px -4px rgba(10,132,255,.55)}
+.side .lg .tx{font-weight:800;font-size:17px;color:#fff;letter-spacing:-.2px;line-height:1}
+.side .lg .tx small{display:block;font-weight:500;font-size:10px;color:#7488ad;letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+.side .navsec{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#5f719a;padding:13px 12px 6px}
+.side a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:11px;font-size:13.5px;font-weight:500;color:#b6c2d9;margin-bottom:1px;transition:.14s}
+.side a svg{width:18px;height:18px;flex-shrink:0;opacity:.85}
+.side a:hover{background:rgba(255,255,255,.06);color:#fff}
+.side a.on{background:rgba(10,132,255,.16);color:#fff;box-shadow:inset 3px 0 0 #0a84ff}
+.side a.on svg{opacity:1;color:#4aa3ff}
+.side a .cnt{margin-left:auto;font-size:11px;font-weight:700;background:rgba(255,255,255,.1);padding:1px 8px;border-radius:999px;color:#cdd8ec}
+.side a.on .cnt{background:rgba(10,132,255,.32);color:#fff}
+.side .grow{flex:1;min-height:8px}
+.side .user{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.05);margin-top:8px}
+.side .user .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2d4b7a,#17305c);display:grid;place-items:center;color:#cfe0ff;font-weight:700;font-size:14px;flex-shrink:0}
+.side .user .nm{min-width:0;flex:1}
+.side .user .nm b{display:block;font-size:13px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side .user .nm span{font-size:11px;color:#7488ad}
+.side .user a{padding:7px;border-radius:9px;color:#8697b8;margin:0}
+.side .user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.side .foot{display:flex;gap:6px;margin-top:7px}
+.side .foot a{flex:1;justify-content:center;font-size:12.5px;padding:9px;border-radius:10px;background:rgba(255,255,255,.05)}
 .side .sep{border-top:1px solid rgba(255,255,255,.1);margin:14px 6px}
 .main{display:flex;flex-direction:column;min-width:0}
 .top{background:#fff;border-bottom:1px solid var(--line);padding:0 26px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
@@ -160,9 +177,11 @@ body.leaving .wrapc{opacity:0;transform:translateY(-4px);transition:opacity .08s
  .toolbar .srch{flex-basis:100%;order:-1}
 }
 </style></head><body><div class="app">
-<aside class="side"><div class="lg"><span class="b"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span>Larr<span style="color:#7db5ff">Admin</span></div>
-<?php foreach($nav as $x):?><a href="<?=$x[0]?>" class="<?=$cur===$x[0]?'on':''?>"><?=ico($x[1])?><?=$x[2]?></a><?php endforeach;?>
-<div class="sep"></div><a href="../index.html" target="_blank"><?=ico('eye')?>Ver tienda</a><a href="logout.php"><?=ico('out')?>Salir</a>
+<aside class="side"><div class="lg"><span class="b"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span><span class="tx">Larr<span style="color:#7db5ff">Admin</span><small>Panel de gestión</small></span></div>
+<?php foreach($navG as $grp=>$items):?><div class="navsec"><?=$grp?></div><?php foreach($items as $x): $c=$cnt[$x[0]]??0;?><a href="<?=$x[0]?>" class="<?=$cur===$x[0]?'on':''?>"><?=ico($x[1])?><?=$x[2]?><?php if($c):?><span class="cnt"><?=$c?></span><?php endif;?></a><?php endforeach;?><?php endforeach;?>
+<div class="grow"></div>
+<div class="user"><span class="av"><?=strtoupper(mb_substr($u['name']??'A',0,1))?></span><span class="nm"><b><?=e($u['name']??'Admin')?></b><span>Administrador</span></span><a href="logout.php" title="Salir"><?=ico('out',17)?></a></div>
+<div class="foot"><a href="../index.html" target="_blank"><?=ico('eye',15)?>Ver tienda</a></div>
 </aside><div class="side-ov" onclick="document.body.classList.remove('nav-open')"></div><div class="main"><div class="top"><div class="left"><button type="button" class="navtoggle" aria-label="Menú" onclick="document.body.classList.toggle('nav-open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><h1><?=e($title)?></h1></div><div class="who"><span>Hola, <?=e($u['name'])?></span><button type="button" class="btn btn-g btn-sm pwa-install" id="pwaInstall" aria-label="Instalar"><?=ico('box',15)?>Instalar</button><a href="logout.php"><?=ico('out',16)?></a></div></div>
 <?php $tabs=[['index.php','dash','Inicio'],['products.php','box','Productos'],['orders.php','cart','Pedidos'],['carts.php','bell','Carritos'],['settings.php','cog','Ajustes']];?>
 <nav class="tabbar"><?php foreach($tabs as $t):?><a href="<?=$t[0]?>" class="<?=$cur===$t[0]?'on':''?>"><?=ico($t[1])?><span><?=$t[2]?></span></a><?php endforeach;?></nav>
