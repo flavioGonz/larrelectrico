@@ -15,7 +15,7 @@ function mail_shell($inner){
     <div style="padding:18px 30px;border-top:1px solid #eee;color:#9aa0aa;font-size:12px;line-height:1.7">
       <b style="color:#6e6e73">Larr Eléctrico</b> · Materiales eléctricos · Montevideo, Uruguay<br>
       WhatsApp <a href="https://wa.me/59894726950" style="color:#0071e3;text-decoration:none">+598 94 726 950</a> · <a href="mailto:ventas@larrelectrico.uy" style="color:#0071e3;text-decoration:none">ventas@larrelectrico.uy</a><br>
-      <a href="https://www.larrelectrico.uy/final/index.html" style="color:#9aa0aa">www.larrelectrico.uy</a>
+      <a href="https://www.larrelectrico.uy/index.html" style="color:#9aa0aa">www.larrelectrico.uy</a>
     </div>
   </div></div>';
 }
@@ -46,7 +46,7 @@ function mail_total_row($label,$val,$strong=false,$color='#1d1d1f'){
 
 /* ---- correos específicos ---- */
 function mail_welcome($name){
-  $site='https://www.larrelectrico.uy/final';
+  $site='https://www.larrelectrico.uy';
   $in=mail_h1('¡Bienvenido/a, '.htmlspecialchars(explode(' ',trim($name))[0]).'!')
     .mail_p('Tu cuenta en <b>Larr Eléctrico</b> ya está lista. Desde tu panel podés seguir tus pedidos, guardar tus datos de envío, comparar productos y comprar más rápido.')
     .'<table style="width:100%;margin:18px 0"><tr>'
@@ -58,7 +58,7 @@ function mail_welcome($name){
   return $in;
 }
 function mail_order($oid,$lines,$subtotal,$iva,$total,$pagar,$disc_amt,$payment,$name){
-  $site='https://www.larrelectrico.uy/final';
+  $site='https://www.larrelectrico.uy';
   $PM=['transfer'=>'Transferencia / Giro bancario','giros'=>'Giros Redpagos / Abitab','cod'=>'Pago contra entrega','pickup'=>'Retira en local','mp'=>'Mercado Pago'];
   $totrows=mail_total_row('Subtotal',mail_money($subtotal))
     .mail_total_row('IVA (22%)',mail_money($iva));

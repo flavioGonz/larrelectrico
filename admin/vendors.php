@@ -5,7 +5,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){ check_csrf();
   $vid=(int)$_POST['id']; $logo=trim($_POST['logo']??'');
   if(!empty($_FILES['logofile']['tmp_name']) && is_uploaded_file($_FILES['logofile']['tmp_name'])){
     $ext=strtolower(pathinfo($_FILES['logofile']['name'],PATHINFO_EXTENSION));
-    if(in_array($ext,['png','jpg','jpeg','webp','svg','gif'])){ $fn='v'.$vid.'_'.time().'.'.$ext; if(move_uploaded_file($_FILES['logofile']['tmp_name'],"$updir/$fn")) $logo='final/assets/vendors/'.$fn; }
+    if(in_array($ext,['png','jpg','jpeg','webp','svg','gif'])){ $fn='v'.$vid.'_'.time().'.'.$ext; if(move_uploaded_file($_FILES['logofile']['tmp_name'],"$updir/$fn")) $logo='assets/vendors/'.$fn; }
   }
   $pdo->prepare("UPDATE vendors SET logo=?, site=?, featured=? WHERE id=?")->execute([$logo,trim($_POST['site']??''),(int)!empty($_POST['featured']),$vid]);
   flash('Vendor actualizado.'); header('Location: vendors.php'); exit;

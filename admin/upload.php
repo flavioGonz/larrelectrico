@@ -11,4 +11,4 @@ $dir=__DIR__.'/../assets/uploads'; if(!is_dir($dir)) @mkdir($dir,0755,true);
 $base=preg_replace('/[^a-zA-Z0-9._-]/','_',pathinfo($f['name'],PATHINFO_FILENAME));
 $fn=substr($base,0,60).'_'.substr(md5(uniqid()),0,6).'.'.$ext;
 if(!move_uploaded_file($f['tmp_name'],"$dir/$fn")){ echo json_encode(['error'=>'no se pudo guardar']); exit; }
-echo json_encode(['ok'=>true,'url'=>'final/assets/uploads/'.$fn,'type'=>in_array($ext,$img)?'image':'doc','name'=>$f['name'],'ext'=>$ext]);
+echo json_encode(['ok'=>true,'url'=>'assets/uploads/'.$fn,'type'=>in_array($ext,$img)?'image':'doc','name'=>$f['name'],'ext'=>$ext]);

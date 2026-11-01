@@ -1,6 +1,6 @@
 <?php
 // Recordatorio de carrito abandonado. Ejecutado por cron cada hora.
-// Uso: /final/api/cart_cron.php?key=CRON_KEY   (&test=email@dominio para probar a una casilla)
+// Uso: /api/cart_cron.php?key=CRON_KEY   (&test=email@dominio para probar a una casilla)
 require(__DIR__.'/../inc/init.php');
 require_once(__DIR__.'/../inc/mailer.php');
 header('Content-Type: application/json; charset=utf-8');

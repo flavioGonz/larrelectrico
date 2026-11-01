@@ -1,4 +1,4 @@
-﻿const WA='59894726950', IMGB='https://www.larrelectrico.uy/', API='/final/api/';
+﻿const WA='59894726950', IMGB='https://www.larrelectrico.uy/', API='/api/';
 const IC={
  cart:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h2l2.5 13h12l2-9H6"/>',
  plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',x:'<path d="M6 6l12 12M18 6 6 18"/>',
@@ -43,7 +43,7 @@ const imgu=u=>!u?null:(u.startsWith('http')?u:IMGB+u.replace(/^\/+/,''));
 const T={add:'Agregado al carrito',empty:'Tu carrito está vacío.',proc:'Procesando…',brand:' — Larr Eléctrico',consult:'Consultar',nostock:'Bajo pedido',instock:'En stock',sold:'vendidos',last:'Últimas unidades'};
 window.pkgBox='<div class="noimg">'+svg('pkg',46)+'</div>';
 let DATA=null;
-async function getData(){ if(DATA)return DATA; try{const r=await fetch('/final/api/catalog.php');DATA=await r.json();}catch(e){const r=await fetch('/final/catalog.json');DATA=await r.json();} return DATA; }
+async function getData(){ if(DATA)return DATA; try{const r=await fetch('/api/catalog.php');DATA=await r.json();}catch(e){const r=await fetch('/catalog.json');DATA=await r.json();} return DATA; }
 /* CART */
 let CART=JSON.parse(localStorage.getItem('larr_cart')||'[]');
 const saveCart=()=>{localStorage.setItem('larr_cart',JSON.stringify(CART));renderCart();syncCart();};

@@ -16,7 +16,7 @@ try{
   $base=(float)($meta['total']??$o['total']);         // total con IVA
   $sur=(float)($CFG['mp_surcharge']??0.09);
   $amount=round($base*(1+$sur),2);                    // + recargo 9%
-  $site=rtrim($CFG['img_base'],'/').'/final';
+  $site=rtrim($CFG['img_base'],'/');
   $pref=[
     'items'=>[[
       'title'=>'Pedido #'.$oid.' — Larr Eléctrico',
