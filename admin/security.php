@@ -1,4 +1,4 @@
-<?php require(__DIR__.'/inc.php'); require_once(__DIR__.'/totp.php'); require_admin();
+<?php require(__DIR__.'/inc.php'); require(__DIR__.'/layout.php'); require_once(__DIR__.'/totp.php'); require_admin();
 $u=admin();
 $me=['totp_enabled'=>0,'totp_secret'=>null];
 try{ $row=db()->prepare("SELECT totp_enabled,totp_secret FROM users WHERE id=?"); $row->execute([$u['id']]); $r=$row->fetch(); if($r)$me=$r; }catch(Exception $e){}
