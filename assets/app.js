@@ -51,6 +51,27 @@ function initCurTog(){ try{
    document.head.appendChild(s);}
  }catch(e){} }
 if(document.readyState!=='loading')initCurTog();else document.addEventListener('DOMContentLoaded',initCurTog);
+/* ===== loader de transición entre páginas (con el logo) ===== */
+(function(){
+ function build(){ if(document.getElementById('pgload'))return document.getElementById('pgload');
+  var ld=document.createElement('div'); ld.id='pgload';
+  ld.innerHTML='<img src="/assets/brand/logo.png" alt="Larr Eléctrico"><span class="pl-bar"><i></i></span>';
+  var st=document.createElement('style'); st.textContent='#pgload{position:fixed;inset:0;z-index:99999;background:rgba(255,255,255,.96);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;opacity:0;visibility:hidden;transition:opacity .25s}#pgload.on{opacity:1;visibility:visible}#pgload img{width:210px;max-width:62vw;animation:plp 1.15s ease-in-out infinite}#pgload .pl-bar{width:150px;height:4px;border-radius:999px;background:#eceef1;overflow:hidden}#pgload .pl-bar i{display:block;height:100%;width:42%;border-radius:999px;background:linear-gradient(90deg,#e80820,#ff3b4e);animation:pll 1.05s cubic-bezier(.65,0,.35,1) infinite}@keyframes plp{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.955);opacity:.72}}@keyframes pll{0%{transform:translateX(-120%)}60%,100%{transform:translateX(300%)}}';
+  document.head.appendChild(st); document.body.appendChild(ld); return ld; }
+ var T=null;
+ function show(){ var l=build(); l.classList.add('on'); clearTimeout(T); T=setTimeout(function(){l.classList.remove('on');},7000); }
+ function hide(){ var l=document.getElementById('pgload'); if(l)l.classList.remove('on'); }
+ if(document.readyState!=='loading')build();else document.addEventListener('DOMContentLoaded',build);
+ document.addEventListener('click',function(e){ var a=e.target.closest('a'); if(!a)return;
+   var href=a.getAttribute('href'); if(!href||href.charAt(0)==='#')return;
+   if(a.target==='_blank'||a.hasAttribute('download')||/^(mailto:|tel:|javascript:)/.test(href))return;
+   if(/^https?:/.test(href) && href.indexOf('larrelectrico.uy')<0)return;
+   if(e.metaKey||e.ctrlKey||e.shiftKey||e.button)return;
+   show();
+ });
+ window.addEventListener('pageshow',function(ev){ if(ev.persisted)hide(); });
+ window.addEventListener('beforeunload',show);
+})();
 const el=s=>document.querySelector(s), els=s=>[...document.querySelectorAll(s)];
 const imgu=u=>!u?null:(u.startsWith('http')?u:IMGB+u.replace(/^\/+/,''));
 const T={add:'Agregado al carrito',empty:'Tu carrito está vacío.',proc:'Procesando…',brand:' — Larr Eléctrico',consult:'Consultar',nostock:'Bajo pedido',instock:'En stock',sold:'vendidos',last:'Últimas unidades'};
