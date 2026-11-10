@@ -1,0 +1,21 @@
+schema: spec-driven
+
+context: |
+  Sitio web, tienda electrónica sin CRM, 100% code. con panel de admin
+  Venta y presupuestos agiles via whatsapp.
+  
+  Debe tener las tendencias modernas de tiendas, para serlo agil
+  Debemos debatir siempre antes desarrollar.
+  
+  Objetivo: Vender de forma agil y simple
+  Entregas bien coordinadas, con seguimiento.
+
+rules:
+  proposal:
+    - Escribir los artefactos en español (los encabezados de OpenSpec quedan en inglés).
+    - Decir qué queda fuera de alcance.
+    - Indicar qué hay que desplegar/reiniciar y qué páginas verificar.
+  tasks:
+    - La última tarea es siempre de verificación.
+  specs:
+    - Cada requisito usa SHALL o MUST y tiene al menos un escenario.
